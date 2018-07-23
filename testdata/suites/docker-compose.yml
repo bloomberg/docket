@@ -1,0 +1,13 @@
+version: "3.2"
+
+services:
+    tester:
+        image: golang
+        environment:
+            - "GOPATH=/go"
+            - "DOCKET_SUITES_TEST_SECRET_VALUE=something"
+        volumes:
+            - type: bind
+              source: ${GOPATH}
+              target: /go
+        command: ["/bin/bash", "-c", "tail -f /dev/null & trap 'kill %1 ; exit' SIGTERM ; wait"]
