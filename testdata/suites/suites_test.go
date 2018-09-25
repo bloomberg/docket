@@ -18,7 +18,7 @@ func TestFullSuite(t *testing.T) {
 	cfgs := docket.ConfigMap{
 		"full": {
 			ComposeFiles: []string{
-				"docker-compose.yml",
+				"docker-compose.yaml",
 			},
 			GoTestExec: &docket.GoTestExec{
 				Service: "tester",
@@ -77,7 +77,7 @@ func (s *SubtestSuite) TestInsideDocker() {
 	cfgs := docket.ConfigMap{
 		"full": {
 			ComposeFiles: []string{
-				"docker-compose.yml",
+				"docker-compose.yaml",
 			},
 			GoTestExec: &docket.GoTestExec{
 				Service: "tester",

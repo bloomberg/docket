@@ -13,8 +13,10 @@ func TestEnvVar(t *testing.T) {
 
 	cfgs := docket.ConfigMap{
 		"full": {
-			ComposeFiles: []string{"docker-compose.yml"},
-			GoTestExec:   &docket.GoTestExec{Service: "tester"},
+			ComposeFiles: []string{
+				"docker-compose.yaml",
+			},
+			GoTestExec: &docket.GoTestExec{Service: "tester"},
 		},
 	}
 
