@@ -247,7 +247,7 @@ func findPackageNameFromCurrentDirAndGOPATH(currentDir, gopath string) (string, 
 			continue
 		}
 
-		return pathUnderGOPATH[len(srcPrefix):], nil
+		return filepath.ToSlash(pathUnderGOPATH[len(srcPrefix):]), nil
 	}
 
 	return "", fmt.Errorf("could not find package name. currentDir=%q GOPATH=%q", currentDir, gopath)
