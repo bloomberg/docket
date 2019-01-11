@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased][]
 
+## [0.2.0][] ([diff][0.2.0-diff]) - 2019-01-11
+
 ### Added
 
 - Examples in [`testdata`](testdata) are tutorials for how to use docket as well
@@ -36,5 +38,7 @@ and this project adheres to
 
 First working version of the library.
 
-[unreleased]: https://github.com/bloomberg/docket/compare/v0.1.0...HEAD
+[unreleased]: https://github.com/bloomberg/docket/compare/v0.2.0...HEAD
+[0.2.0-diff]: https://github.com/bloomberg/docket/compare/v0.1.0...v0.2.0
+[0.2.0]: https://github.com/bloomberg/docket/releases/tag/v0.2.0
 [0.1.0]: https://github.com/bloomberg/docket/releases/tag/v0.1.0
