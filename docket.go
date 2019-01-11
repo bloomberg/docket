@@ -1,123 +1,113 @@
-package docket
+// Package docket helps you use Docker Compose to manage test environments.
+//
+// See the README in https://github.com/bloomberg/docket for usage examples.
+//
+package docket // import "github.com/bloomberg/docket"
 
 import (
 	"context"
 	"fmt"
 	"os"
 	"testing"
+
+	"github.com/bloomberg/docket/internal/compose"
 )
 
-// Config is a configuration for running tests.
-type Config struct {
-	// ComposeFiles are the docker-compose configuration files to use.
-	// (Think `docker-compose --file FILE`.)
-	ComposeFiles []string
-
-	// GoTestExec (optional) specifies how docket should exec `go test` inside a docker container.
-	GoTestExec *GoTestExec
-}
-
-// GoTestExec specifies how docket should exec `go test` inside a docker container.
-type GoTestExec struct {
-	// Service is the name of the service (container) in which docket should exec `go test`.
-	Service string
-
-	// BuildTags (optional) are build tags to pass to `go test`.
-	BuildTags []string
-}
-
-// Context tells you information about the current docket test setup.
+// Context can tell you information about the active docket environment.
 //
 // It is not related to context.Context.
 type Context struct {
-	activeConfig *namedConfig
+	mode    string
+	compose compose.Compose
 }
 
-type namedConfig struct {
-	Config
-	Name string
-}
-
-// ConfigName returns the name of the active Config or a blank string if no Config is being used.
+// Mode returns the name of the active mode or a blank string if no mode is being used.
 //
-// Caveat: When docket execs a test inside a docker container, ConfigName will be empty, since
-// the inner test execution is running without an active Config.
-func (c Context) ConfigName() string {
-	if c.activeConfig == nil {
-		return ""
-	}
-
-	return c.activeConfig.Name
+// Caveat: When docket runs a test inside a docker container, mode will be empty, since the inner
+// test execution is running without an active docket mode.
+func (c Context) Mode() string {
+	return c.mode
 }
 
-// ExposedPort returns the exposed host port number corresponding to the containerPort for
-// a service. If that service does not expose containerPort, it will return an error.
-func (c Context) ExposedPort(ctx context.Context, service string, containerPort int) (int, error) {
-	if c.activeConfig == nil {
+// PublishedPort returns the publicly exposed host port number corresponding to the privatePort for
+// a service. If that service does not publish privatePort, it will return an error.
+func (c Context) PublishedPort(ctx context.Context, service string, privatePort int) (int, error) {
+	if c.mode == "" {
 		return -1, fmt.Errorf("no active test config")
 	}
 
-	return dockerComposePort(ctx, c.activeConfig.Config, service, containerPort)
+	return c.compose.GetPort(ctx, service, privatePort)
 }
 
 //----------------------------------------------------------
 
-// ConfigMap is a mapping from a name to a configuration.
-type ConfigMap map[string]Config
-
-// Run executes testFunc, possibly using one of the configurations in the ConfigMap (depending
-// on whether GO_DOCKET_CONFIG is set), which might mean that it's being executed inside a docker
-// container.
+// Run executes testFunc in the proper test environment.
 //
-// If non-nil, testContext will be populated so that it is usable inside testFunc.
-func Run(ctx context.Context, configMap ConfigMap, docketCtx *Context, t *testing.T, testFunc func()) {
-	configName := os.Getenv("GO_DOCKET_CONFIG")
+// If DOCKET_MODE is set, docket looks for files matching 'docket.yaml', 'docket.MODE.yaml', and
+// 'docket.MODE.*.yaml' (.yml files are also allowed). It uses `docker-compose` with the docket
+// files (in that order) to set up a test environment, run testFunc, and optionally tear down the
+// environment.
+//
+// If docketCtx is non-nil, it will be populated so that it is usable inside testFunc.
+//
+// For more documentation and usage examples, see the package's source repository.
+func Run(ctx context.Context, docketCtx *Context, t *testing.T, testFunc func()) {
+	t.Helper()
+	RunPrefix(ctx, docketCtx, t, "docket", testFunc)
+}
 
-	if configName == "" {
+// RunPrefix acts identically to Run, but it only looks at files starting with prefix.
+func RunPrefix(ctx context.Context, docketCtx *Context, t *testing.T, prefix string, testFunc func()) {
+	t.Helper()
+
+	mode := os.Getenv("DOCKET_MODE")
+	if mode == "" {
 		testFunc()
 		return
 	}
 
-	config, ok := configMap[configName]
-	if !ok {
-		t.Fatalf("no Config found with name %q", configName)
+	compose, cleanup, err := compose.NewCompose(ctx, prefix, mode)
+	if err != nil {
+		t.Fatalf("NewCompose failed: %v", err)
 	}
-
-	if docketCtx != nil {
-		docketCtx.activeConfig = &namedConfig{
-			Name:   configName,
-			Config: config,
-		}
-	}
-
-	if os.Getenv("GO_DOCKET_PULL") != "" {
-		if err := dockerComposePull(ctx, config); err != nil {
-			t.Fatalf("failed dockerComposePull: %v", err)
-		}
-	} else {
-		// TODO warn about outdated images
-	}
-
-	if err := dockerComposeUp(ctx, config); err != nil {
-		t.Fatalf("failed dockerComposeUp: %v", err)
-	}
-
 	defer func() {
-		if os.Getenv("GO_DOCKET_DOWN") != "" {
-			if err := dockerComposeDown(ctx, config); err != nil {
-				t.Fatalf("failed dockerComposeDown: %v", err)
-			}
-		} else {
-			trace("[docket] leaving docker-compose app running...\n")
+		if err := cleanup(); err != nil {
+			t.Fatalf("failed cleanup: %v", err)
 		}
 	}()
 
-	if config.GoTestExec == nil {
-		testFunc()
-		return
+	dctx := Context{
+		mode:    mode,
+		compose: *compose,
 	}
 
-	if err := dockerComposeExecGoTest(ctx, config, t.Name()); err != nil {
-		t.Fatalf("failed exec'ing go test: %v", err)
+	if docketCtx != nil {
+		*docketCtx = dctx
+	}
+
+	if os.Getenv("DOCKET_PULL") != "" {
+		if err := compose.Pull(ctx); err != nil {
+			t.Fatalf("failed compose.Pull: %v", err)
+		}
+		// } else {
+		// TODO warn about outdated images
+	}
+
+	if err := compose.Up(ctx); err != nil {
+		t.Fatalf("failed compose.Up: %v", err)
+	}
+
+	defer func() {
+		if os.Getenv("DOCKET_DOWN") != "" {
+			if err := compose.Down(ctx); err != nil {
+				t.Fatalf("failed compose.Down: %v", err)
+			}
+		} else {
+			fmt.Printf("leaving docker-compose app running...\n") // TODO trace?
+		}
+	}()
+
+	if err := dctx.compose.RunTestfuncOrExecGoTest(ctx, t.Name(), testFunc); err != nil {
+		t.Fatalf("compose.RunTestfuncOrExecGoTest failed: %v", err)
 	}
 }

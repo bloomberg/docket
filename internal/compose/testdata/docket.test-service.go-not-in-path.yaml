@@ -1,0 +1,6 @@
+version: "3.2"
+
+services:
+  tester:
+    environment:
+      PATH: "/bin:/usr/bin" # go is in /usr/local/go/bin/go

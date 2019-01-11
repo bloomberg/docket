@@ -1,4 +1,4 @@
-package docket
+package compose
 
 import (
 	"os"

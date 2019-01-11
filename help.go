@@ -3,26 +3,39 @@ package docket
 import (
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"text/template"
 
 	"github.com/fatih/color"
 )
 
-const docketHelp = `
+func writeHelp(out io.Writer) {
+	bold := func(s string) string {
+		return color.New(color.Bold).Sprint(s)
+	}
+
+	tmpl := template.New("help").Funcs(template.FuncMap{"var": bold})
+	err := template.Must(tmpl.Parse(`
 Help for using docket:
 
-  {{ var "GO_DOCKET_CONFIG" }}
-    To use docket, set this to the name of the config to use.
+  {{ var "DOCKET_MODE" }}
+    To use docket, set this to the name of the mode to use.
 
 Optional environment variables:
 
-  {{ var "GO_DOCKET_DOWN" }} (default off)
-      If non-empty, docket will run 'docker-compose down' after each suite.
+  {{ var "DOCKET_DOWN" }} (default off)
+    If non-empty, docket will run 'docker-compose down' after each suite.
 
-  {{ var "GO_DOCKET_PULL" }} (default off)
-      If non-empty, docket will run 'docker-compose pull' before each suite.
-`
+  {{ var "DOCKET_PULL" }} (default off)
+    If non-empty, docket will run 'docker-compose pull' before each suite.
+
+`[1:])).Execute(out, nil)
+
+	if err != nil {
+		panic(fmt.Sprintf("failed to Execute help template: %v", err))
+	}
+}
 
 func init() {
 	// We register a flag to get it shown in the default usage.
@@ -38,14 +51,7 @@ func init() {
 
 	for _, arg := range os.Args {
 		if arg == "-help-docket" || arg == "--help-docket" {
-			bold := func(s string) string {
-				return color.New(color.Bold).Sprint(s)
-			}
-
-			tmpl := template.New("help").Funcs(template.FuncMap{"var": bold})
-			template.Must(tmpl.Parse(docketHelp)).Execute(os.Stderr, nil)
-
-			fmt.Fprintf(os.Stderr, "\n")
+			writeHelp(os.Stderr)
 			os.Exit(2)
 		}
 	}

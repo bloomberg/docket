@@ -1,0 +1,22 @@
+version: "3.2"
+
+networks:
+  default:
+    internal: true
+
+services:
+  tester:
+    image: golang:1
+
+    # This command waits indefinitely until someone sends it SIGTERM.
+    command: ["bash", "-c", "tail -f /dev/null & trap 'kill %1' SIGTERM ; wait"]
+
+    # This label tells docket to run go test inside this container.
+    labels:
+      com.bloomberg.docket: "run go test"
+
+    # We set an environment variable to tell the test which Redis server address to ping.
+    # In this case, "redis" is the name of the service declared in docker.yaml.
+    # Docker helps us by resolving service names to IPs.
+    environment:
+      REDIS_ADDR: redis:6379

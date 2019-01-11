@@ -6,5 +6,5 @@ This file lists dependencies of the tests in testdata to make it easier to use
 */
 
 import (
-	_ "gopkg.in/redis.v5"
+	_ "github.com/go-redis/redis"
 )

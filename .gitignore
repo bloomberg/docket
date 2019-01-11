@@ -1,0 +1,3 @@
+FAKE_GOPATH.*
+
+**/docket-source-mounts.*.yaml

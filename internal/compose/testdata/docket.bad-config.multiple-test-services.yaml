@@ -1,0 +1,10 @@
+version: "3.2"
+services:
+  alice:
+    image: golang:1
+    labels:
+      com.bloomberg.docket: "run go test"
+  bob:
+    image: golang:1
+    labels:
+      com.bloomberg.docket: "run go test"

@@ -1,0 +1,28 @@
+version: "3.2"
+
+networks:
+  default:
+    internal: true
+
+services:
+  pinger:
+    image: golang:1
+    environment:
+      REDIS_ADDR: redis:6379
+    command:
+      [
+        "go",
+        "run",
+        "github.com/bloomberg/docket/testdata/03_redispinger-service",
+        ":80",
+      ]
+    labels:
+      com.bloomberg.docket: "mount go sources"
+
+  tester:
+    image: golang:1
+    command: ["bash", "-c", "tail -f /dev/null & trap 'kill %1' SIGTERM ; wait"]
+    labels:
+      com.bloomberg.docket: "run go test"
+    environment:
+      REDISPINGER_URL: http://pinger/?redisAddr=redis:6379
