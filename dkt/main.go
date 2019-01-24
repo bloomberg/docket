@@ -44,6 +44,7 @@ func executeSubcommand(cobraCmd *cobra.Command, cobraCmdArgs []string) {
 	args = append(args, cobraCmdArgs...)
 
 	cmd := cmp.Command(ctx, args...)
+	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cobraCmd.Printf("Running: %v\n", cmd.Args)

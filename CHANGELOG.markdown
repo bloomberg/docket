@@ -8,6 +8,10 @@ and this project adheres to
 
 ## [Unreleased][]
 
+### Fixed
+
+- `dkt` propagates stdin so that `docker-compose` prompts work.
+
 ## [0.2.0][] ([diff][0.2.0-diff]) - 2019-01-11
 
 ### Added
