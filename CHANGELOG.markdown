@@ -8,6 +8,12 @@ and this project adheres to
 
 ## [Unreleased][]
 
+### Changed
+
+- Docket now sets the working directory of Docker containers that use
+  `run go test` or `mount go sources` to be the package's source code directory,
+  which more closely matches what `go test` does.
+
 ### Fixed
 
 - `dkt` propagates stdin so that `docker-compose` prompts work.

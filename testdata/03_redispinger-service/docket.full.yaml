@@ -9,13 +9,7 @@ services:
     image: golang:1
     environment:
       REDIS_ADDR: redis:6379
-    command:
-      [
-        "go",
-        "run",
-        "github.com/bloomberg/docket/testdata/03_redispinger-service",
-        ":80",
-      ]
+    command: ["go", "run", ".", ":80"]
     labels:
       com.bloomberg.docket: "mount go sources"
 

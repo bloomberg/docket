@@ -15,32 +15,32 @@ type HelpersSuite struct {
 	suite.Suite
 }
 
-func (s *HelpersSuite) Test_findPackageNameFromCurrentDirAndGOPATH() {
+func (s *HelpersSuite) Test_findPackageNameFromDirAndGOPATH() {
 	goodCases := []struct {
-		CurDir string
+		PkgDir string
 		GOPATH []string
 		Result string
 	}{
 		{
-			CurDir: filepath.FromSlash("/go/src/package"),
+			PkgDir: filepath.FromSlash("/go/src/package"),
 			GOPATH: []string{filepath.FromSlash("/go")},
 			Result: "package",
 		},
 		{
-			CurDir: filepath.FromSlash("/go/src/package"),
+			PkgDir: filepath.FromSlash("/go/src/package"),
 			GOPATH: []string{filepath.FromSlash("/another"), filepath.FromSlash("/go")},
 			Result: "package",
 		},
 	}
 
 	for _, c := range goodCases {
-		pkg, err := findPackageNameFromCurrentDirAndGOPATH(c.CurDir, c.GOPATH)
+		pkg, err := findPackageNameFromDirAndGOPATH(c.PkgDir, c.GOPATH)
 		s.NoError(err)
 		s.Equal(c.Result, pkg, "case: %v", c)
 	}
 
 	badCases := []struct {
-		CurDir string
+		PkgDir string
 		GOPATH []string
 	}{
 		{"/unrelated/path", []string{"/go"}},
@@ -49,7 +49,7 @@ func (s *HelpersSuite) Test_findPackageNameFromCurrentDirAndGOPATH() {
 	}
 
 	for _, c := range badCases {
-		_, err := findPackageNameFromCurrentDirAndGOPATH(c.CurDir, c.GOPATH)
+		_, err := findPackageNameFromDirAndGOPATH(c.PkgDir, c.GOPATH)
 		s.Error(err)
 	}
 }

@@ -6,11 +6,9 @@ import (
 	"strings"
 )
 
-// According to `go list`, dirs containing a main aren't in a package, but if we use the name
-// relative to a GOPATH, we can use it to invoke `go test <name>`.
-func findPackageNameFromCurrentDirAndGOPATH(currentDir string, gopath []string) (string, error) {
+func findPackageNameFromDirAndGOPATH(pkgDir string, gopath []string) (string, error) {
 	for _, gp := range gopath {
-		pathUnderGOPATH, err := filepath.Rel(gp, currentDir)
+		pathUnderGOPATH, err := filepath.Rel(gp, pkgDir)
 		if err != nil {
 			continue
 		}
@@ -23,8 +21,7 @@ func findPackageNameFromCurrentDirAndGOPATH(currentDir string, gopath []string) 
 		return filepath.ToSlash(pathUnderGOPATH[len(srcPrefix):]), nil
 	}
 
-	return "", fmt.Errorf(
-		"could not find package name. currentDir=%q GOPATH=%q", currentDir, gopath)
+	return "", fmt.Errorf("could not find package name. pkgDir=%q GOPATH=%q", pkgDir, gopath)
 }
 
 // From go test -h:

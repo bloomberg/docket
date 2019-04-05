@@ -20,7 +20,6 @@ import (
 type Compose struct {
 	baseArgs []string
 
-	testPkg string
 	testSvc string
 }
 
@@ -60,12 +59,6 @@ func NewCompose(ctx context.Context, prefix, mode string) (cmp *Compose, cleanup
 	cmp.testSvc, err = findSingleTestService(cfg)
 	if err != nil {
 		return nil, cleanup, err
-	}
-
-	if cmp.testSvc != "" {
-		if cmp.testPkg, err = determineTestPackage(goList, goPath); err != nil {
-			return nil, cleanup, err
-		}
 	}
 
 	return cmp, cleanup, nil
@@ -160,15 +153,8 @@ func (c Compose) RunTestfuncOrExecGoTest(ctx context.Context, testName string, t
 		"-T", // disable pseudo-tty allocation
 		c.testSvc,
 		"go", "test",
-		c.testPkg,
 		"-run", makeRunArgForTest(testName, originalTestRunArg),
 	}
-
-	// Since we've made it this far, this test result has not been cached, and we should make sure
-	// that results inside the docker container are also not cached. The main test driver will
-	// handle repeating tests for us, so we can always use -count=1 to disable the test cache when
-	// we exec the test inside docker.
-	args = append(args, "-count=1")
 
 	if testing.Verbose() {
 		args = append(args, "-v")
@@ -294,14 +280,6 @@ func parseDocketLabel(svc cmpService) (runGoTest bool, mountGoSources bool, err 
 		fmt.Errorf("unexpected value for %q : %q", docketLabelKey, labelData)
 }
 
-func determineTestPackage(goList goList, goPath []string) (string, error) {
-	if goList.Module != nil {
-		return goList.ImportPath, nil
-	}
-
-	return findPackageNameFromCurrentDirAndGOPATH(goList.Dir, goPath)
-}
-
 func doSourceMounts(cfg cmpConfig, goList goList, goPath []string) (args []string, cleanup func() error, err error) {
 	noop := func() error { return nil }
 
@@ -364,23 +342,38 @@ func newMountsCfg(originalCfg cmpConfig, goList goList, goPath []string) (*cmpCo
 
 	var mountsSvc cmpService
 	if goList.Module == nil {
+		const goPathTarget = "/go"
+
+		pkgName, err := findPackageNameFromDirAndGOPATH(goList.Dir, goPath)
+		if err != nil {
+			return nil, err
+		}
+
 		mountsSvc = cmpService{
 			Volumes: []cmpVolume{
 				{
 					Type:   "bind",
 					Source: goPath[0],
-					Target: "/go",
+					Target: goPathTarget,
 				},
 			},
+			WorkingDir: fmt.Sprintf("%s/src/%s", goPathTarget, pkgName),
 		}
 	} else {
+		const goPathTarget = "/go"
 		const goModuleDirTarget = "/go-module-dir"
+
+		pathInsideModule, err := filepath.Rel(goList.Module.Dir, goList.Dir)
+		if err != nil {
+			return nil, err
+		}
+
 		mountsSvc = cmpService{
 			Volumes: []cmpVolume{
 				{
 					Type:   "bind",
 					Source: filepath.Join(goPath[0], "pkg", "mod"),
-					Target: "/go/pkg/mod",
+					Target: fmt.Sprintf("%s/pkg/mod", goPathTarget),
 				},
 				{
 					Type:   "bind",
@@ -388,7 +381,7 @@ func newMountsCfg(originalCfg cmpConfig, goList goList, goPath []string) (*cmpCo
 					Target: goModuleDirTarget,
 				},
 			},
-			WorkingDir: goModuleDirTarget,
+			WorkingDir: fmt.Sprintf("%s/%s", goModuleDirTarget, filepath.ToSlash(pathInsideModule)),
 		}
 	}
 
