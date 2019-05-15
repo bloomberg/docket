@@ -8,6 +8,8 @@ and this project adheres to
 
 ## [Unreleased][]
 
+## [0.3.0][] ([diff][0.3.0-diff]) - 2019-05-15
+
 ### Changed
 
 - Docket now sets the working directory of Docker containers that use
@@ -48,7 +50,9 @@ and this project adheres to
 
 First working version of the library.
 
-[unreleased]: https://github.com/bloomberg/docket/compare/v0.2.0...HEAD
+[unreleased]: https://github.com/bloomberg/docket/compare/v0.3.0...HEAD
+[0.3.0-diff]: https://github.com/bloomberg/docket/compare/v0.2.0...v0.3.0
 [0.2.0-diff]: https://github.com/bloomberg/docket/compare/v0.1.0...v0.2.0
+[0.3.0]: https://github.com/bloomberg/docket/releases/tag/v0.3.0
 [0.2.0]: https://github.com/bloomberg/docket/releases/tag/v0.2.0
 [0.1.0]: https://github.com/bloomberg/docket/releases/tag/v0.1.0
