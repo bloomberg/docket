@@ -7,6 +7,17 @@ to manage test environments.
 
 This pre-1.0.0 API is subject to change as we make improvements.
 
+## Contents
+
+- [Overview](#overview)
+- [Examples](#examples)
+- [Help](#help)
+- [Testing Docket](#testing-docket)
+- [Code of Conduct](#code-of-conduct)
+- [Contributing](#contributing)
+- [License](#license)
+- [Security Policy](#security-policy)
+
 ## Overview
 
 Docket helps you run a test or test suite inside a multi-container Docker
@@ -83,10 +94,6 @@ starting with your custom prefix instead of the default prefix (`"docket"`).
 For more detailed examples, refer to the
 [tests](internal/compose/files_test.go).
 
-## Contributing
-
-Please see our [contribution guidelines](CONTRIBUTING.markdown).
-
 ## Testing Docket
 
 Docket has unit tests as well as integration tests that run the examples in the
@@ -113,3 +120,36 @@ COVERAGE_DIR=COVERAGE go test -v -coverprofile=coverage.root ./... && \
 go tool cover -func <(gocovmerge coverage.root $(find COVERAGE -type f))
 ```
 
+## Code of Conduct
+
+Docket has adopted a
+[Code of Conduct](https://github.com/bloomberg/.github/blob/master/CODE_OF_CONDUCT.md).
+If you have any concerns about the Code or behavior which you have experienced
+in the project, please contact us at opensource@bloomberg.net.
+
+## Contributing
+
+We'd love to hear from you, whether you've found a bug or want to suggest how
+docket could be better. Please
+[open an issue](https://github.com/bloomberg/docket/issues/new/choose) and let
+us know what you think!
+
+If you want to contribute code to the docket project, please be sure to read our
+[contribution guidelines](https://github.com/bloomberg/.github/blob/master/CONTRIBUTING.md).
+**We highly recommend opening an issue before you start working on your pull
+request.** We'd like to talk with you about the change you want to make _before_
+you start making it. :smile:
+
+## License
+
+Docket is licensed under the [Apache License, Version 2.0](LICENSE).
+
+## Security Policy
+
+If you believe you have identified a security vulnerability in this project,
+please send an email to the project team at opensource@bloomberg.net detailing
+the suspected issue and any methods you've found to reproduce it.
+
+Please do _not_ open an issue in the GitHub repository, as we'd prefer to keep
+vulnerability reports private until we've had an opportunity to review and
+address them. Thank you.
