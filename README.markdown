@@ -1,7 +1,7 @@
 # docket
 
-Docket helps you use [Docker Compose][docker-compose-overview] to manage test
-environments.
+Docket helps you use [Docker Compose](https://docs.docker.com/compose/overview/)
+to manage test environments.
 
 ## &#x26A0; **_Stability warning: API might change_** &#x26A0;
 
@@ -14,9 +14,10 @@ application using Docker Compose. If requested, docket will run bring up a
 Docker Compose app, run the test suite, and optionally shut down the app. If you
 don't activate docket, the test will run as if you weren't using docket at all.
 
-Docket is compatible with the standard [`testing`][testing-godoc] package
-(including [`T.Run`][t.run] subtests) as well as
-[`testify/suite`][testify-suite-readme].
+Docket is compatible with the standard [`testing`](https://godoc.org/testing)
+package (including [`T.Run`](https://godoc.org/testing#T.Run) subtests) as well
+as
+[`testify/suite`](https://github.com/stretchr/testify/blob/master/README.md#suite-package).
 
 ### dkt
 
@@ -112,8 +113,3 @@ COVERAGE_DIR=COVERAGE go test -v -coverprofile=coverage.root ./... && \
 go tool cover -func <(gocovmerge coverage.root $(find COVERAGE -type f))
 ```
 
-[docker-compose-overview]: https://docs.docker.com/compose/overview/
-[testing-godoc]: https://godoc.org/testing
-[testify-suite-readme]:
-  https://github.com/stretchr/testify/blob/master/README.md#suite-package
-[t.run]: https://godoc.org/testing#T.Run
