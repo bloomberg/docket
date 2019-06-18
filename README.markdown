@@ -1,11 +1,22 @@
 # docket
 
-Docket helps you use [Docker Compose][docker-compose-overview] to manage test
-environments.
+Docket helps you use [Docker Compose](https://docs.docker.com/compose/overview/)
+to manage test environments.
 
 ## &#x26A0; **_Stability warning: API might change_** &#x26A0;
 
 This pre-1.0.0 API is subject to change as we make improvements.
+
+## Contents
+
+- [Overview](#overview)
+- [Examples](#examples)
+- [Help](#help)
+- [Testing Docket](#testing-docket)
+- [Code of Conduct](#code-of-conduct)
+- [Contributing](#contributing)
+- [License](#license)
+- [Security Policy](#security-policy)
 
 ## Overview
 
@@ -14,9 +25,10 @@ application using Docker Compose. If requested, docket will run bring up a
 Docker Compose app, run the test suite, and optionally shut down the app. If you
 don't activate docket, the test will run as if you weren't using docket at all.
 
-Docket is compatible with the standard [`testing`][testing-godoc] package
-(including [`T.Run`][t.run] subtests) as well as
-[`testify/suite`][testify-suite-readme].
+Docket is compatible with the standard [`testing`](https://godoc.org/testing)
+package (including [`T.Run`](https://godoc.org/testing#T.Run) subtests) as well
+as
+[`testify/suite`](https://github.com/stretchr/testify/blob/master/README.md#suite-package).
 
 ### dkt
 
@@ -82,11 +94,7 @@ starting with your custom prefix instead of the default prefix (`"docket"`).
 For more detailed examples, refer to the
 [tests](internal/compose/files_test.go).
 
-## Contributing
-
-Please see our [contribution guidelines](CONTRIBUTING.markdown).
-
-## Testing docket
+## Testing Docket
 
 Docket has unit tests as well as integration tests that run the examples in the
 `testdata` directory.
@@ -96,15 +104,15 @@ Docket has unit tests as well as integration tests that run the examples in the
 Docket tries to test itself in both `GOPATH` mode and module-aware mode if
 possible.
 
-- Running `go test` inside a `GOPATH` will run both kinds of tests.
-  - Use `go test -run /GOPATH/` to run only `GOPATH` mode tests.
-  - Use `go test -run /module/` to run only module-aware mode tests.
-- Running `go test` outside a `GOPATH` will only run tests in module-aware mode.
+- `go test` inside a `GOPATH` will run both kinds of tests.
+  - `go test -run /GOPATH/` will run only `GOPATH` mode tests.
+  - `go test -run /module/` will run only module-aware mode tests.
+- `go test` outside a `GOPATH` will only run tests in module-aware mode.
 
 ### Coverage
 
-To gather coverage, use `-coverprofile` for the main in-process tests and set
-`COVERAGE_DIR` to gather coverage from the `go test` child processes. Then use
+To gather coverage, use `-coverprofile` for the main in-process tests, and set
+`COVERAGE_DIR` to gather coverage from the `go test` child processes. Then, use
 [`gocovmerge`](https://github.com/wadey/gocovmerge) to merge the coverage data.
 
 ```sh
@@ -112,8 +120,36 @@ COVERAGE_DIR=COVERAGE go test -v -coverprofile=coverage.root ./... && \
 go tool cover -func <(gocovmerge coverage.root $(find COVERAGE -type f))
 ```
 
-[docker-compose-overview]: https://docs.docker.com/compose/overview/
-[testing-godoc]: https://godoc.org/testing
-[testify-suite-readme]:
-  https://github.com/stretchr/testify/blob/master/README.md#suite-package
-[t.run]: https://godoc.org/testing#T.Run
+## Code of Conduct
+
+Docket has adopted a
+[Code of Conduct](https://github.com/bloomberg/.github/blob/master/CODE_OF_CONDUCT.md).
+If you have any concerns about the Code or behavior which you have experienced
+in the project, please contact us at opensource@bloomberg.net.
+
+## Contributing
+
+We'd love to hear from you, whether you've found a bug or want to suggest how
+docket could be better. Please
+[open an issue](https://github.com/bloomberg/docket/issues/new/choose) and let
+us know what you think!
+
+If you want to contribute code to the docket project, please be sure to read our
+[contribution guidelines](https://github.com/bloomberg/.github/blob/master/CONTRIBUTING.md).
+**We highly recommend opening an issue before you start working on your pull
+request.** We'd like to talk with you about the change you want to make _before_
+you start making it. :smile:
+
+## License
+
+Docket is licensed under the [Apache License, Version 2.0](LICENSE).
+
+## Security Policy
+
+If you believe you have identified a security vulnerability in this project,
+please send an email to the project team at opensource@bloomberg.net detailing
+the suspected issue and any methods you've found to reproduce it.
+
+Please do _not_ open an issue in the GitHub repository, as we'd prefer to keep
+vulnerability reports private until we've had an opportunity to review and
+address them. Thank you.
