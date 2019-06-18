@@ -87,7 +87,7 @@ For more detailed examples, refer to the
 
 Please see our [contribution guidelines](CONTRIBUTING.markdown).
 
-## Testing docket
+## Testing Docket
 
 Docket has unit tests as well as integration tests that run the examples in the
 `testdata` directory.
@@ -97,15 +97,15 @@ Docket has unit tests as well as integration tests that run the examples in the
 Docket tries to test itself in both `GOPATH` mode and module-aware mode if
 possible.
 
-- Running `go test` inside a `GOPATH` will run both kinds of tests.
-  - Use `go test -run /GOPATH/` to run only `GOPATH` mode tests.
-  - Use `go test -run /module/` to run only module-aware mode tests.
-- Running `go test` outside a `GOPATH` will only run tests in module-aware mode.
+- `go test` inside a `GOPATH` will run both kinds of tests.
+  - `go test -run /GOPATH/` will run only `GOPATH` mode tests.
+  - `go test -run /module/` will run only module-aware mode tests.
+- `go test` outside a `GOPATH` will only run tests in module-aware mode.
 
 ### Coverage
 
-To gather coverage, use `-coverprofile` for the main in-process tests and set
-`COVERAGE_DIR` to gather coverage from the `go test` child processes. Then use
+To gather coverage, use `-coverprofile` for the main in-process tests, and set
+`COVERAGE_DIR` to gather coverage from the `go test` child processes. Then, use
 [`gocovmerge`](https://github.com/wadey/gocovmerge) to merge the coverage data.
 
 ```sh
