@@ -8,6 +8,11 @@ and this project adheres to
 
 ## [Unreleased][]
 
+### Added
+
+- Docket can pass options to `docker-compose pull` if you set
+  `DOCKET_PULL_OPTS`.
+
 ## [0.3.0][] ([diff][0.3.0-diff]) - 2019-05-15
 
 ### Changed
