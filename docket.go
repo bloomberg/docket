@@ -22,6 +22,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/bloomberg/docket/internal/compose"
@@ -100,7 +101,8 @@ func RunPrefix(ctx context.Context, docketCtx *Context, t *testing.T, prefix str
 	}
 
 	if os.Getenv("DOCKET_PULL") != "" {
-		if err := compose.Pull(ctx); err != nil {
+		pullOpts := strings.Fields(os.Getenv("DOCKET_PULL_OPTS"))
+		if err := compose.Pull(ctx, pullOpts); err != nil {
 			t.Fatalf("failed compose.Pull: %v", err)
 		}
 		// } else {

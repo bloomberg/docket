@@ -137,9 +137,10 @@ func (c Compose) GetPort(ctx context.Context, service string, port int) (int, er
 }
 
 // Pull calls `docker-compose pull`.
-func (c Compose) Pull(ctx context.Context) error {
+func (c Compose) Pull(ctx context.Context, args []string) error {
 	cmd := c.Command(ctx, "pull")
 
+	cmd.Args = append(cmd.Args, args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 

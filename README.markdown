@@ -85,6 +85,19 @@ _Default:_ `false`
 If `DOCKET_PULL` is non-empty, docket will run `docker-compose pull` at the
 start of each `docket.Run()`.
 
+#### DOCKET_PULL_OPTS
+
+_Default:_ ``
+
+If `DOCKET_PULL_OPTS` is non-empty, docket will add its contents to the
+invocation of the `docker-compose pull` command.
+
+For example, to avoid pulling images in parallel, you can set
+`DOCKET_PULL_OPTS=--no-parallel` so that docket will run
+`docker-compose pull --no-parallel`.
+
+Setting `DOCKET_PULL_OPTS` has no effect if you do not set `DOCKET_PULL=1`.
+
 ### Using a custom file prefix
 
 If you need to keep multiple independent docket configurations in the same
