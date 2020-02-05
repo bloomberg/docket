@@ -23,7 +23,7 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-func Test_Help(t *testing.T) {
+func Test_help(t *testing.T) {
 	suite.Run(t, &HelpSuite{})
 }
 
