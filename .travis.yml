@@ -1,0 +1,6 @@
+language: go
+
+go:
+  - stable
+  - oldstable
+  - master
