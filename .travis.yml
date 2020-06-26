@@ -17,11 +17,13 @@ before_script:
 script:
   - |
     COVERAGE_DIR=COVERAGE/MODULE \
-    go test -v -coverprofile=COVERAGE/root.module ./...
+    go test -v -coverprofile=COVERAGE/coverage.module.root ./...
 
+    # use absolute paths, since run_in_temp_gopath_with_go_modules_disabled
+    # changes the working directory
   - |
-    COVERAGE_DIR=COVERAGE/GOPATH \
+    COVERAGE_DIR=$(pwd)/COVERAGE/GOPATH \
     ./run_in_temp_gopath_with_go_modules_disabled \
-    go test -v -coverprofile=COVERAGE/root.gopath ./...
+    go test -v -coverprofile=$(pwd)/COVERAGE/coverage.gopath.root ./...
 
   - go tool cover -func <(gocovmerge $(find COVERAGE -type f))
