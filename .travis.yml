@@ -9,7 +9,7 @@ before_install:
   - |
     set -o errexit
     cd $GOPATH
-    go get https://github.com/wadey/gocovmerge
+    go get github.com/wadey/gocovmerge
     rm -rf $GOPATH/github.com/wady/gocovmerge
 
 before_script:
