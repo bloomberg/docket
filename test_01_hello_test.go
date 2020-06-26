@@ -21,6 +21,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"testing"
+
+	"github.com/stretchr/testify/suite"
 )
 
 func Test_01_hello(t *testing.T) {
@@ -28,13 +30,13 @@ func Test_01_hello(t *testing.T) {
 		t.Skip("skipping docker-dependent test suite in short mode")
 	}
 
-	runSuiteWithAndWithoutModules(t, &HelloSuite{
+	suite.Run(t, &HelloSuite{
 		dir: filepath.Join("testdata", "01_hello"),
 	})
 }
 
 type HelloSuite struct {
-	gopathOrModulesSuite
+	suite.Suite
 
 	dir string
 }
@@ -43,7 +45,7 @@ func (s *HelloSuite) Test_FailsOutsideDocker() {
 	cmd := exec.CommandContext(context.Background(), "go", "test", "-v")
 	cmd.Args = append(cmd.Args, coverageArgs(s.T().Name())...)
 	cmd.Dir = s.dir
-	cmd.Env = append(os.Environ(), s.GopathEnvOverride()...)
+	cmd.Env = os.Environ()
 
 	out, err := cmd.CombinedOutput()
 	if err == nil {
@@ -56,8 +58,7 @@ func (s *HelloSuite) Test_SucceedsInsideDocker() {
 	cmd := exec.CommandContext(context.Background(), "go", "test", "-v")
 	cmd.Args = append(cmd.Args, coverageArgs(s.T().Name())...)
 	cmd.Dir = s.dir
-	cmd.Env = append(os.Environ(), s.GopathEnvOverride()...)
-	cmd.Env = append(cmd.Env, "DOCKET_MODE=1", "DOCKET_DOWN=1")
+	cmd.Env = append(os.Environ(), "DOCKET_MODE=1", "DOCKET_DOWN=1")
 
 	// Since we activated docket, it should succeed inside our docker-compose app.
 	out, err := cmd.CombinedOutput()

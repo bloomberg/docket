@@ -21,9 +21,10 @@ import (
 	"strings"
 )
 
-var coverageDir = os.Getenv("COVERAGE_DIR")
+const coverageDirEnvVar = "COVERAGE_DIR"
 
 func init() {
+	coverageDir := os.Getenv(coverageDirEnvVar)
 	if coverageDir == "" {
 		return
 	}
@@ -34,6 +35,7 @@ func init() {
 }
 
 func coverageArgs(testName string) []string {
+	coverageDir := os.Getenv(coverageDirEnvVar)
 	if coverageDir == "" {
 		return nil
 	}

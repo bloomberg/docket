@@ -8,6 +8,7 @@ services:
   pinger:
     image: golang:1
     environment:
+      GO111MODULE: ${GO111MODULE-}
       REDIS_ADDR: redis:6379
     command: ["go", "run", ".", ":80"]
     labels:
@@ -19,4 +20,5 @@ services:
     labels:
       com.bloomberg.docket: "run go test"
     environment:
+      GO111MODULE: ${GO111MODULE-}
       REDISPINGER_URL: http://pinger/?redisAddr=redis:6379

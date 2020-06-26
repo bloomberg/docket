@@ -4,5 +4,7 @@ services:
   tester:
     image: golang:1
     command: ["bash", "-c", "tail -f /dev/null & trap 'kill %1' SIGTERM ; wait"]
+    environment:
+      GO111MODULE: ${GO111MODULE-}
     labels:
       com.bloomberg.docket: "run go test"

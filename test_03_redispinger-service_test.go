@@ -24,6 +24,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/suite"
 )
 
 func Test_03_redispinger_service(t *testing.T) {
@@ -31,13 +33,13 @@ func Test_03_redispinger_service(t *testing.T) {
 		t.Skip("skipping docker-dependent test suite in short mode")
 	}
 
-	runSuiteWithAndWithoutModules(t, &RedisPingerSuite{
+	suite.Run(t, &RedisPingerSuite{
 		dir: filepath.Join("testdata", "03_redispinger-service"),
 	})
 }
 
 type RedisPingerSuite struct {
-	gopathOrModulesSuite
+	suite.Suite
 
 	dir string
 }
@@ -71,9 +73,8 @@ func (s *RedisPingerSuite) Test_DebugMode() {
 	testCmd := exec.CommandContext(ctx, "go", "test", "-v")
 	testCmd.Args = append(testCmd.Args, coverageArgs(s.T().Name())...)
 	testCmd.Dir = s.dir
-	testCmd.Env = append(os.Environ(), s.GopathEnvOverride()...)
 	testCmd.Env = append(
-		testCmd.Env,
+		os.Environ(),
 		fmt.Sprintf("REDISPINGER_URL=http://localhost:%s/?redisAddr=localhost:%s",
 			pingerPort, redisPort),
 		"DOCKET_MODE=debug")
@@ -89,8 +90,7 @@ func (s *RedisPingerSuite) Test_FullMode() {
 	cmd := exec.CommandContext(context.Background(), "go", "test", "-v")
 	cmd.Args = append(cmd.Args, coverageArgs(s.T().Name())...)
 	cmd.Dir = s.dir
-	cmd.Env = append(os.Environ(), s.GopathEnvOverride()...)
-	cmd.Env = append(cmd.Env, "DOCKET_MODE=full", "DOCKET_DOWN=1")
+	cmd.Env = append(os.Environ(), "DOCKET_MODE=full", "DOCKET_DOWN=1")
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -105,7 +105,7 @@ func (s *RedisPingerSuite) runDkt(ctx context.Context, arg ...string) []byte {
 	cmd := exec.CommandContext(ctx, "go", "run", "github.com/bloomberg/docket/dkt")
 	cmd.Args = append(cmd.Args, arg...)
 	cmd.Dir = s.dir
-	cmd.Env = append(os.Environ(), s.GopathEnvOverride()...)
+	cmd.Env = os.Environ()
 
 	out, err := cmd.Output()
 	if err != nil {
@@ -123,7 +123,7 @@ func (s *RedisPingerSuite) runDkt(ctx context.Context, arg ...string) []byte {
 func (s *RedisPingerSuite) startPinger(ctx context.Context) (cmd *exec.Cmd, port string) {
 	cmd = exec.CommandContext(ctx, "go", "run", ".")
 	cmd.Dir = s.dir
-	cmd.Env = append(os.Environ(), s.GopathEnvOverride()...)
+	cmd.Env = os.Environ()
 
 	stdout, err := cmd.StdoutPipe()
 	s.Require().NoError(err)
