@@ -4,3 +4,25 @@ go:
   - stable
   - oldstable
   - master
+
+before_install:
+  - |
+    set -o errexit
+    cd $GOPATH
+    go install https://github.com/wadey/gocovmerge
+    rm -rf $GOPATH/github.com/wady/gocovmerge
+
+before_script:
+  - mkdir COVERAGE
+
+script:
+  - |
+    COVERAGE_DIR=COVERAGE/MODULE \
+    go test -v -coverprofile=COVERAGE/root.module ./...
+
+  - |
+    COVERAGE_DIR=COVERAGE/GOPATH \
+    ./run_in_temp_gopath_with_go_modules_disabled \
+    go test -v -coverprofile=COVERAGE/root.gopath ./...
+
+  - go tool cover -func <(gocovmerge $(find COVERAGE -type f))
