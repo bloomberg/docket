@@ -7,10 +7,10 @@ go:
 
 before_install:
   - |
-    set -o errexit
-    cd $GOPATH
-    go get github.com/wadey/gocovmerge
-    rm -rf $GOPATH/github.com/wady/gocovmerge
+    (set -o errexit &&
+    cd $GOPATH &&
+    go get github.com/wadey/gocovmerge &&
+    rm -rf $GOPATH/github.com/wady/gocovmerge)
 
 before_script:
   - mkdir COVERAGE
