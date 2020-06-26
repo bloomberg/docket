@@ -9,7 +9,7 @@ before_install:
   - |
     (cd $GOPATH &&
     go get github.com/wadey/gocovmerge &&
-    rm -rf $GOPATH/src/github.com/wady)
+    rm -r $GOPATH/src/github.com/wadey)
 
 before_script:
   - mkdir COVERAGE
@@ -19,8 +19,8 @@ script:
     COVERAGE_DIR=COVERAGE/MODULE \
     go test -v -coverprofile=COVERAGE/coverage.module.root ./...
 
-    # use absolute paths, since run_in_temp_gopath_with_go_modules_disabled
-    # changes the working directory
+  # use absolute paths, since run_in_temp_gopath_with_go_modules_disabled
+  # changes the working directory
   - |
     COVERAGE_DIR=$(pwd)/COVERAGE/GOPATH \
     ./run_in_temp_gopath_with_go_modules_disabled \
