@@ -9,7 +9,7 @@ before_install:
   - |
     (cd $GOPATH &&
     go get github.com/wadey/gocovmerge &&
-    rm -r $GOPATH/src/github.com/wadey)
+    rm -rf $GOPATH/src/github.com/wadey)
 
 before_script:
   - mkdir COVERAGE
