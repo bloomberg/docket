@@ -1,0 +1,41 @@
+#!/bin/sh
+
+# Copyright 2020 Bloomberg Finance L.P.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+set -o errexit -o nounset
+
+# vendor *before* changing the GOPATH to use the main module cache
+GO111MODULE=on \
+  go mod vendor
+
+# Using a hidden name stops 'cp *' from trying to copy the directory into itself.
+export GOPATH="${PWD}/.TEMP_GOPATH"
+
+rm -rf "${GOPATH}"
+mkdir -p "${GOPATH}"
+
+mv vendor "${GOPATH}/src"
+
+docket_dir="${GOPATH}/src/github.com/bloomberg/docket"
+mkdir -p "${docket_dir}"
+cp -r -- * "${docket_dir}/"
+
+echo "Recreated project inside ${GOPATH}" >&2
+
+set -o xtrace
+
+cd "${docket_dir}"
+GO111MODULE=off \
+  exec "$@"

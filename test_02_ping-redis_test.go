@@ -21,6 +21,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"testing"
+
+	"github.com/stretchr/testify/suite"
 )
 
 func Test_02_ping_redis(t *testing.T) {
@@ -28,13 +30,13 @@ func Test_02_ping_redis(t *testing.T) {
 		t.Skip("skipping docker-dependent test suite in short mode")
 	}
 
-	runSuiteWithAndWithoutModules(t, &PingRedisSuite{
+	suite.Run(t, &PingRedisSuite{
 		dir: filepath.Join("testdata", "02_ping-redis"),
 	})
 }
 
 type PingRedisSuite struct {
-	gopathOrModulesSuite
+	suite.Suite
 
 	dir string
 }
@@ -53,8 +55,7 @@ func (s *PingRedisSuite) testMode(ctx context.Context, mode string) {
 	cmd := exec.CommandContext(ctx, "go", "test", "-v")
 	cmd.Args = append(cmd.Args, coverageArgs(s.T().Name())...)
 	cmd.Dir = s.dir
-	cmd.Env = append(os.Environ(), s.GopathEnvOverride()...)
-	cmd.Env = append(cmd.Env, "DOCKET_MODE="+mode, "DOCKET_DOWN=1")
+	cmd.Env = append(os.Environ(), "DOCKET_MODE="+mode, "DOCKET_DOWN=1")
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {

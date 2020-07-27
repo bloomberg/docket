@@ -24,6 +24,8 @@ import (
 	"path/filepath"
 	"regexp"
 	"testing"
+
+	"github.com/stretchr/testify/suite"
 )
 
 func Test_99_testify_suite(t *testing.T) {
@@ -31,13 +33,13 @@ func Test_99_testify_suite(t *testing.T) {
 		t.Skip("skipping docker-dependent test suite in short mode")
 	}
 
-	runSuiteWithAndWithoutModules(t, &TestifySuiteSuite{
+	suite.Run(t, &TestifySuiteSuite{
 		dir: filepath.Join("testdata", "99_testify-suite"),
 	})
 }
 
 type TestifySuiteSuite struct {
-	gopathOrModulesSuite
+	suite.Suite
 
 	dir string
 }
@@ -71,8 +73,7 @@ func (s *TestifySuiteSuite) runGoTest(ctx context.Context, arg ...string) []byte
 	cmd.Args = append(cmd.Args, coverageArgs(s.T().Name())...)
 	cmd.Args = append(cmd.Args, arg...)
 	cmd.Dir = s.dir
-	cmd.Env = append(os.Environ(), s.GopathEnvOverride()...)
-	cmd.Env = append(cmd.Env, "DOCKET_MODE=full", "DOCKET_DOWN=1")
+	cmd.Env = append(os.Environ(), "DOCKET_MODE=full", "DOCKET_DOWN=1")
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {

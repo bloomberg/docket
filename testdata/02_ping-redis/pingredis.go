@@ -15,7 +15,7 @@
 package pingredis
 
 import (
-	"github.com/go-redis/redis"
+	"github.com/go-redis/redis/v7"
 )
 
 // PingRedis pings the Redis instance at redisAddr.
