@@ -77,7 +77,7 @@ func (s *ComposeSuite) Test_PullWithoutImage() {
 	s.NoError(err)
 	s.Require().NotNil(cmp)
 
-	s.NoError(cmp.Pull(s.ctx))
+	s.NoError(cmp.Pull(s.ctx, nil))
 }
 
 func (s *ComposeSuite) Test_GetPort() {

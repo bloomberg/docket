@@ -19,4 +19,5 @@ services:
     # In this case, "redis" is the name of the service declared in docker.yaml.
     # Docker helps us by resolving service names to IPs.
     environment:
+      GO111MODULE: ${GO111MODULE-} # added to support GOPATH mode
       REDIS_ADDR: redis:6379

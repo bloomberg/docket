@@ -20,5 +20,5 @@ This file lists dependencies of the tests in testdata to make it easier to use
 */
 
 import (
-	_ "github.com/go-redis/redis"
+	_ "github.com/go-redis/redis/v7"
 )

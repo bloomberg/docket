@@ -7,4 +7,5 @@ services:
     labels:
       com.bloomberg.docket: "run go test"
     environment:
+      GO111MODULE: ${GO111MODULE-} # added to support GOPATH mode
       SECRET_VALUE: something
