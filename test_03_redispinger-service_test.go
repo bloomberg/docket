@@ -72,6 +72,7 @@ func (s *RedisPingerSuite) Test_DebugMode() {
 
 	testCmd := exec.CommandContext(ctx, "go", "test", "-v")
 	testCmd.Args = append(testCmd.Args, goTestCoverageArgs(s.T().Name())...)
+	testCmd.Args = append(testCmd.Args, goTestRaceDetectorArgs()...)
 	testCmd.Dir = s.dir
 	testCmd.Env = append(
 		os.Environ(),
@@ -89,6 +90,7 @@ func (s *RedisPingerSuite) Test_DebugMode() {
 func (s *RedisPingerSuite) Test_FullMode() {
 	cmd := exec.CommandContext(context.Background(), "go", "test", "-v")
 	cmd.Args = append(cmd.Args, goTestCoverageArgs(s.T().Name())...)
+	cmd.Args = append(cmd.Args, goTestRaceDetectorArgs()...)
 	cmd.Dir = s.dir
 	cmd.Env = append(os.Environ(), "DOCKET_MODE=full", "DOCKET_DOWN=1")
 

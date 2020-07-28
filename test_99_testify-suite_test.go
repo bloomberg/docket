@@ -71,6 +71,7 @@ func (s *TestifySuiteSuite) Test_SuiteLevel_EverythingButSubtestA() {
 func (s *TestifySuiteSuite) runGoTest(ctx context.Context, arg ...string) []byte {
 	cmd := exec.CommandContext(ctx, "go", "test", "-v")
 	cmd.Args = append(cmd.Args, goTestCoverageArgs(s.T().Name())...)
+	cmd.Args = append(cmd.Args, goTestRaceDetectorArgs()...)
 	cmd.Args = append(cmd.Args, arg...)
 	cmd.Dir = s.dir
 	cmd.Env = append(os.Environ(), "DOCKET_MODE=full", "DOCKET_DOWN=1")
