@@ -33,7 +33,7 @@ type HelpSuite struct {
 
 func (s *HelpSuite) Test_runGoTest() {
 	cmd := exec.CommandContext(context.Background(), "go", "test", "-help-docket")
-	cmd.Args = append(cmd.Args, coverageArgs(s.T().Name())...)
+	cmd.Args = append(cmd.Args, goTestCoverageArgs(s.T().Name())...)
 
 	// When run inside go test,
 	//   All test output and summary lines are printed to the go command's
