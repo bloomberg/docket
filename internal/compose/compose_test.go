@@ -34,7 +34,11 @@ func Test_Compose(t *testing.T) {
 	if err := os.Chdir("testdata"); err != nil {
 		t.Fatal(err)
 	}
-	defer os.Chdir(origDir)
+	defer func() {
+		if err := os.Chdir(origDir); err != nil {
+			t.Fatal(err)
+		}
+	}()
 
 	suite.Run(t, &ComposeSuite{
 		ctx: context.Background(),

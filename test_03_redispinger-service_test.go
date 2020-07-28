@@ -65,7 +65,7 @@ func (s *RedisPingerSuite) Test_DebugMode() {
 	pingerCmd, pingerPort := s.startPinger(ctx)
 	defer func() {
 		s.Require().NoError(pingerCmd.Process.Kill())
-		pingerCmd.Wait()
+		s.Error(pingerCmd.Wait()) // since we killed the process, Wait will return an error
 	}()
 
 	// Run go test with REDISPINGER_URL set properly
