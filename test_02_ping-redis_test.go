@@ -53,7 +53,8 @@ func (s *PingRedisSuite) Test_FullMode() {
 
 func (s *PingRedisSuite) testMode(ctx context.Context, mode string) {
 	cmd := exec.CommandContext(ctx, "go", "test", "-v")
-	cmd.Args = append(cmd.Args, coverageArgs(s.T().Name())...)
+	cmd.Args = append(cmd.Args, goTestCoverageArgs(s.T().Name())...)
+	cmd.Args = append(cmd.Args, goTestRaceDetectorArgs()...)
 	cmd.Dir = s.dir
 	cmd.Env = append(os.Environ(), "DOCKET_MODE="+mode, "DOCKET_DOWN=1")
 
