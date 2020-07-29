@@ -112,19 +112,29 @@ For more detailed examples, refer to the
 Docket has unit tests as well as integration tests that run the examples in the
 `testdata` directory.
 
-### GOPATH and go modules
+### Module-aware mode and GOPATH-mode
 
-Docket tries to test itself in both `GOPATH` mode and module-aware mode if
-possible.
+Docket works in both `GOPATH` mode and module-aware mode, but its tests only run
+in one mode at a time. As of Go 1.13, if you haven't overridden `GO111MODULE`,
+Go will run in module-aware mode.
 
-- `go test` inside a `GOPATH` will run both kinds of tests.
-  - `go test -run /GOPATH/` will run only `GOPATH` mode tests.
-  - `go test -run /module/` will run only module-aware mode tests.
-- `go test` outside a `GOPATH` will only run tests in module-aware mode.
+To run tests (or other tools) in `GOPATH` mode, you can use the
+[`run_in_temp_gopath_with_go_modules_disabled`](run_in_temp_gopath_with_go_modules_disabled)
+helper script, which creates a temporary `GOPATH` at `.TEMP_GOPATH`, sets
+`GO111MODULE=off`, and runs the script's arguments inside the corresponding
+docket package directory (`.TEMP_GOPATH/src/github.com/bloomberg/docket`).
+
+```sh
+# module-aware mode, by default
+go test ./...
+
+# GOPATH mode (GO111MODULE=off)
+./run_in_temp_gopath_with_go_modules_disabled go test ./...
+```
 
 ### Coverage
 
-To gather coverage, use `-coverprofile` for the main in-process tests, and set
+To gather coverage, use `-coverprofile` for the main in-process tests and set
 `COVERAGE_DIR` to gather coverage from the `go test` child processes. Then, use
 [`gocovmerge`](https://github.com/wadey/gocovmerge) to merge the coverage data.
 
@@ -132,6 +142,11 @@ To gather coverage, use `-coverprofile` for the main in-process tests, and set
 COVERAGE_DIR=COVERAGE go test -v -coverprofile=coverage.root ./... && \
 go tool cover -func <(gocovmerge coverage.root $(find COVERAGE -type f))
 ```
+
+Note: If you're gathering coverage using
+`run_in_temp_gopath_with_go_modules_disabled`, the `COVERAGE_DIR` will be
+relative to the temporary docket directory inside `.TEMP_GOPATH` (see above)
+unless you give an absolute path as your `COVERAGE_DIR`.
 
 ## Code of Conduct
 
