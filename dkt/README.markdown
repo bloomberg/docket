@@ -1,11 +1,40 @@
-# `dkt`
+# dkt
 
 Command `dkt` runs `docker-compose` with a set of docket files.
 
-## Using `dkt`
+## Usage
 
-`dkt` is useful for working with your docket setups without having to invoke
-`go test`.
+`dkt` is useful for working with your docket configurations without having to
+invoke `go test`.
+
+Running `dkt -h` will show `dkt`'s help followed by `docker-compose`'s help.
+
+```console
+$ dkt -h
+
+dkt runs docker-compose with the docker-compose files and generated
+configuration that match the given docket mode and prefix.
+
+Any arguments that aren't dkt-specific will be passed through to docker-compose.
+
+Usage:
+  dkt [OPTIONS] [arguments to docker-compose...]
+
+Examples:
+  dkt config
+  dkt up -d
+  dkt down
+
+Options:
+  -h, --help            Show this help
+  -v, --version         Show version information
+  -m, --mode=MODE       Set the docket mode (required) [$DOCKET_MODE]
+  -P, --prefix=PREFIX   Set the docket prefix (default: docket) [$DOCKET_PREFIX]
+
+Output of 'docker-compose help'
+-------------------------------
+...
+```
 
 ### Example
 
@@ -32,10 +61,20 @@ dkt -m mode down
 
 ## Installation
 
-A common pattern is to install Go tools into `$GOPATH/bin`.
+We highly recommend building `dkt` in module-mode. To do this, you can use a
+tool like [`gobin`](https://github.com/myitcv/gobin) or do it yourself in a
+temporary directory like so:
 
 ```sh
-go get github.com/bloomberg/docket/dkt
+dktdir=$(mktemp -d)
+cd "$dktdir"
+
+go mod init dktmod # make up any name you like
+
+go install github.com/bloomberg/docket/dkt
+
+cd
+rm -rf "$dktdir"
 ```
 
 If you have docket inside your `$GOPATH/src` tree, you can run it on the fly
@@ -44,7 +83,3 @@ using `go run`:
 ```sh
 go run github.com/bloomberg/docket/dkt
 ```
-
-## Usage
-
-Run `dkt -h` for usage.
