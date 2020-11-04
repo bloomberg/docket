@@ -17,6 +17,8 @@ package compose
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -45,6 +47,12 @@ func runGoList(ctx context.Context) (goList, error) {
 	cmd := exec.CommandContext(ctx, "go", "list", "-json") // #nosec
 	out, err := cmd.Output()
 	if err != nil {
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
+			return goList{}, fmt.Errorf(
+				"'go list -json' exited with %d: %s", exitErr.ExitCode(), exitErr.Stderr)
+		}
+
 		return goList{}, err
 	}
 
