@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package docket
+package docket_test
 
 import (
 	"context"
@@ -31,7 +31,8 @@ func Test_02_ping_redis(t *testing.T) {
 	}
 
 	suite.Run(t, &PingRedisSuite{
-		dir: filepath.Join("testdata", "02_ping-redis"),
+		Suite: suite.Suite{},
+		dir:   filepath.Join("testdata", "02_ping-redis"),
 	})
 }
 

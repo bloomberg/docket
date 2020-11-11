@@ -44,11 +44,13 @@ func (c Context) Mode() string {
 	return c.mode
 }
 
+var ErrNoActiveTestConfig = fmt.Errorf("no active test config")
+
 // PublishedPort returns the publicly exposed host port number corresponding to the privatePort for
 // a service. If that service does not publish privatePort, it will return an error.
 func (c Context) PublishedPort(ctx context.Context, service string, privatePort int) (int, error) {
 	if c.mode == "" {
-		return -1, fmt.Errorf("no active test config")
+		return -1, ErrNoActiveTestConfig
 	}
 
 	return c.compose.GetPort(ctx, service, privatePort)
@@ -78,6 +80,7 @@ func RunPrefix(ctx context.Context, docketCtx *Context, t *testing.T, prefix str
 	mode := os.Getenv("DOCKET_MODE")
 	if mode == "" {
 		testFunc()
+
 		return
 	}
 
@@ -105,8 +108,6 @@ func RunPrefix(ctx context.Context, docketCtx *Context, t *testing.T, prefix str
 		if err := compose.Pull(ctx, pullOpts); err != nil {
 			t.Fatalf("failed compose.Pull: %v", err)
 		}
-		// } else {
-		// TODO warn about outdated images
 	}
 
 	if err := compose.Up(ctx); err != nil {
@@ -119,7 +120,7 @@ func RunPrefix(ctx context.Context, docketCtx *Context, t *testing.T, prefix str
 				t.Fatalf("failed compose.Down: %v", err)
 			}
 		} else {
-			fmt.Printf("leaving docker-compose app running...\n") // TODO trace?
+			fmt.Printf("leaving docker-compose app running...\n")
 		}
 	}()
 

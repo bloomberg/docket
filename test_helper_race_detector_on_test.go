@@ -14,6 +14,6 @@
 
 // +build race
 
-package docket
+package docket_test
 
 func goTestRaceDetectorArgs() []string { return []string{"-race"} }

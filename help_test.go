@@ -12,10 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package docket
+package docket_test
 
 import (
-	"bytes"
 	"context"
 	"os/exec"
 	"testing"
@@ -46,10 +45,4 @@ func (s *HelpSuite) Test_runGoTest() {
 
 	s.Error(err)
 	s.Regexp("Help for using docket:", string(out))
-}
-
-func (s *HelpSuite) Test_writeHelp() {
-	var buf bytes.Buffer
-	writeHelp(&buf)
-	s.Regexp("Help for using docket:", buf.String())
 }
