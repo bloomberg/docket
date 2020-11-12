@@ -29,7 +29,7 @@ type FilesSuite struct {
 	suite.Suite
 }
 
-func (s *FilesSuite) Test_filterAndSortFilenames() {
+func (s *FilesSuite) Test_fileSorter() {
 	cases := []struct {
 		prefix string
 		mode   string
@@ -83,14 +83,9 @@ func (s *FilesSuite) Test_filterAndSortFilenames() {
 	}
 
 	for _, c := range cases {
-		s.Equal(
-			c.result,
-			filterAndSortFilenames(c.prefix, c.mode, c.files),
-			fmt.Sprintf("prefix=%q mode=%q", c.prefix, c.mode))
-	}
-}
+		fs := newFileSorter(c.prefix, c.mode)
+		fs.AddFiles(c.files)
 
-func (s *FilesSuite) Test_filterAndSortFilenames_panics_when_missing_mode_or_prefix() {
-	s.Panics(func() { filterAndSortFilenames("", "mode", nil) }, "empty prefix panics")
-	s.Panics(func() { filterAndSortFilenames("prefix", "", nil) }, "empty mode panics")
+		s.Equal(c.result, fs.Results(), fmt.Sprintf("prefix=%q mode=%q", c.prefix, c.mode))
+	}
 }
