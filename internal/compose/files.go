@@ -43,6 +43,7 @@ func filterAndSortFilenames(prefix, mode string, files []string) []string {
 	for _, f := range files {
 		if prefixOnlyPattern.MatchString(f) {
 			prefixOnly = append(prefixOnly, f)
+
 			continue
 		}
 		if mm := modeAndMaybeMorePattern.FindStringSubmatch(f); mm != nil {
@@ -51,6 +52,7 @@ func filterAndSortFilenames(prefix, mode string, files []string) []string {
 			} else {
 				prefixModeAndMore = append(prefixModeAndMore, f)
 			}
+
 			continue
 		}
 	}
@@ -68,7 +70,7 @@ func filterAndSortFilenames(prefix, mode string, files []string) []string {
 func findFiles(prefix, mode string) ([]string, error) {
 	infos, err := ioutil.ReadDir(".")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read current dir: %w", err)
 	}
 
 	files := make([]string, len(infos))

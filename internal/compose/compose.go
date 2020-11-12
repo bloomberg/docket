@@ -86,6 +86,7 @@ func (c Compose) Command(ctx context.Context, arg ...string) *exec.Cmd {
 	cmd.Args = append(cmd.Args, c.baseArgs...)
 	cmd.Args = append(cmd.Args, arg...)
 	cmd.Env = os.Environ()
+
 	return cmd
 }
 
@@ -96,8 +97,8 @@ func (c Compose) Down(ctx context.Context) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	trace("down %v\n", cmd.Args)
-	defer trace("down finished\n")
+	tracef("down %v\n", cmd.Args)
+	defer tracef("down finished\n")
 
 	return cmd.Run()
 }
@@ -106,31 +107,33 @@ func (c Compose) Down(ctx context.Context) error {
 func (c Compose) GetConfig(ctx context.Context) ([]byte, error) {
 	cmd := c.Command(ctx, "config")
 
-	trace("config %v\n", cmd.Args)
+	tracef("config %v\n", cmd.Args)
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		return nil, fmt.Errorf("error getting config: err=%v out=%s", err, out)
+		return nil, fmt.Errorf("error getting config: err=%w out=%s", err, out)
 	}
 
 	return out, nil
 }
 
+var errPortNotFound = fmt.Errorf("port not found")
+
 // GetPort runs `docker-compose port` and returns the public port for a service's port binding.
 func (c Compose) GetPort(ctx context.Context, service string, port int) (int, error) {
 	cmd := c.Command(ctx, "port", service, strconv.Itoa(port))
 
-	trace("port %v\n", cmd.Args)
+	tracef("port %v\n", cmd.Args)
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		return 0, fmt.Errorf("port error: err=%v out=%q", err, out)
+		return 0, fmt.Errorf("port error: err=%w out=%q", err, out)
 	}
 
 	re := regexp.MustCompile(":[[:digit:]]+$")
 	match := re.Find(bytes.TrimSpace(out))
 	if len(match) == 0 {
-		return 0, fmt.Errorf("could not find port number in output: %q", out)
+		return 0, fmt.Errorf("%w: %q", errPortNotFound, out)
 	}
 
 	return strconv.Atoi(string(match[1:])) // drop the leading colon
@@ -144,8 +147,8 @@ func (c Compose) Pull(ctx context.Context, args []string) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	trace("pull %v\n", cmd.Args)
-	defer trace("pull finished\n")
+	tracef("pull %v\n", cmd.Args)
+	defer tracef("pull finished\n")
 
 	return cmd.Run()
 }
@@ -155,6 +158,7 @@ func (c Compose) Pull(ctx context.Context, args []string) error {
 func (c Compose) RunTestfuncOrExecGoTest(ctx context.Context, testName string, testFunc func()) error {
 	if c.testSvc == "" {
 		testFunc()
+
 		return nil
 	}
 
@@ -180,11 +184,11 @@ func (c Compose) RunTestfuncOrExecGoTest(ctx context.Context, testName string, t
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	trace("exec %v\n", cmd.Args)
-	defer trace("exec finished\n")
+	tracef("exec %v\n", cmd.Args)
+	defer tracef("exec finished\n")
 
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to exec go test: %v", err)
+		return fmt.Errorf("failed to exec go test: %w", err)
 	}
 
 	return nil
@@ -197,8 +201,8 @@ func (c Compose) Up(ctx context.Context, service ...string) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	trace("up %v\n", cmd.Args)
-	defer trace("up finished\n")
+	tracef("up %v\n", cmd.Args)
+	defer tracef("up finished\n")
 
 	return cmd.Run()
 }
@@ -234,13 +238,15 @@ func (c Compose) getAndParseConfig(ctx context.Context) (cmpConfig, error) {
 
 	var cfg cmpConfig
 	if err := yaml.Unmarshal(cfgBytes, &cfg); err != nil {
-		return cmpConfig{}, err
+		return cmpConfig{}, fmt.Errorf("failed to unmarshal yaml: %w", err)
 	}
 
 	return cfg, nil
 }
 
 //------------------------------------------------------------------------------
+
+var errNoMatchingDocketFiles = fmt.Errorf("no matching docket files found")
 
 func makeDocketFileArgs(prefix, mode string) ([]string, error) {
 	files, err := findFiles(prefix, mode)
@@ -249,17 +255,19 @@ func makeDocketFileArgs(prefix, mode string) ([]string, error) {
 	}
 
 	if len(files) == 0 {
-		return nil, fmt.Errorf(
-			"docket did not find any files matching prefix=%s, mode=%s", prefix, mode)
+		return nil, fmt.Errorf("%w: prefix=%s, mode=%s", errNoMatchingDocketFiles, prefix, mode)
 	}
 
-	args := make([]string, 0, len(files)*2)
+	const sizeOfArgPair = 2
+	args := make([]string, 0, len(files)*sizeOfArgPair)
 	for _, f := range files {
 		args = append(args, "--file", f)
 	}
 
 	return args, nil
 }
+
+var errMultipleTestServices = fmt.Errorf("multiple test services found")
 
 func findSingleTestService(cfg cmpConfig) (string, error) {
 	testSvc := ""
@@ -268,8 +276,8 @@ func findSingleTestService(cfg cmpConfig) (string, error) {
 			return "", err
 		} else if runGoTest {
 			if testSvc != "" {
-				return "", fmt.Errorf("multiple test services found (at least %q and %q)",
-					testSvc, name)
+				return "",
+					fmt.Errorf("%w (at least %q and %q)", errMultipleTestServices, testSvc, name)
 			}
 			testSvc = name
 		}
@@ -277,6 +285,8 @@ func findSingleTestService(cfg cmpConfig) (string, error) {
 
 	return testSvc, nil
 }
+
+var errUnrecognizedDocketLabel = fmt.Errorf("unrecognized docket label")
 
 func parseDocketLabel(svc cmpService) (runGoTest bool, mountGoSources bool, err error) {
 	const docketLabelKey = "com.bloomberg.docket"
@@ -292,7 +302,7 @@ func parseDocketLabel(svc cmpService) (runGoTest bool, mountGoSources bool, err 
 	}
 
 	return false, false,
-		fmt.Errorf("unexpected value for %q : %q", docketLabelKey, labelData)
+		fmt.Errorf("%w: %q : %q", errUnrecognizedDocketLabel, docketLabelKey, labelData)
 }
 
 func doSourceMounts(cfg cmpConfig, goList goList, goPath []string) (args []string, cleanup func() error, err error) {
@@ -308,14 +318,16 @@ func doSourceMounts(cfg cmpConfig, goList goList, goPath []string) (args []strin
 
 	mountsFile, err := ioutil.TempFile(".", "docket-source-mounts.*.yaml")
 	if err != nil {
-		return nil, noop, err
+		return nil, noop, fmt.Errorf("failed to create source mounts yaml: %w", err)
 	}
 
 	cleanup = func() error {
 		if os.Getenv("DOCKET_KEEP_MOUNTS_FILE") != "" {
-			trace("Leaving %s alone\n", mountsFile.Name())
+			tracef("Leaving %s alone\n", mountsFile.Name())
+
 			return nil
 		}
+
 		return os.Remove(mountsFile.Name())
 	}
 
@@ -336,23 +348,26 @@ func doSourceMounts(cfg cmpConfig, goList goList, goPath []string) (args []strin
 	}()
 
 	if err := enc.Encode(mountsCfg); err != nil {
-		return nil, noop, err
+		return nil, noop, fmt.Errorf("failed to encode yaml: %w", err)
 	}
 
 	return []string{"--file", mountsFile.Name()}, cleanup, nil
 }
 
-// newMountsCfg makes a cmpConfig to bind mount Go sources
+var errMultipleGOPATHs = fmt.Errorf("docket doesn't support multipart GOPATHs")
+
+// newMountsCfg makes a cmpConfig to bind mount Go sources.
 func newMountsCfg(originalCfg cmpConfig, goList goList, goPath []string) (*cmpConfig, error) {
 	mountsCfg := cmpConfig{
 		Version:  "3.2",
 		Services: map[string]cmpService{},
+		Networks: nil,
 	}
 
 	needMounts := false
 
 	if len(goPath) != 1 {
-		return nil, fmt.Errorf("we currently don't support multipart GOPATHs")
+		return nil, errMultipleGOPATHs
 	}
 
 	var mountsSvc cmpService
@@ -365,6 +380,10 @@ func newMountsCfg(originalCfg cmpConfig, goList goList, goPath []string) (*cmpCo
 		}
 
 		mountsSvc = cmpService{
+			Command:     nil,
+			Environment: nil,
+			Image:       "",
+			Labels:      nil,
 			Volumes: []cmpVolume{
 				{
 					Type:   "bind",
@@ -380,10 +399,14 @@ func newMountsCfg(originalCfg cmpConfig, goList goList, goPath []string) (*cmpCo
 
 		pathInsideModule, err := filepath.Rel(goList.Module.Dir, goList.Dir)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed filepath.Rel: %w", err)
 		}
 
 		mountsSvc = cmpService{
+			Command:     nil,
+			Environment: nil,
+			Image:       "",
+			Labels:      nil,
 			Volumes: []cmpVolume{
 				{
 					Type:   "bind",
@@ -424,6 +447,7 @@ func chainCleanups(a, b func() error) func() error {
 		if err := b(); err != nil {
 			return err
 		}
+
 		return nil
 	}
 }

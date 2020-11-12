@@ -20,6 +20,8 @@ import (
 	"strings"
 )
 
+var errPackageNameNotFound = fmt.Errorf("package name not found")
+
 func findPackageNameFromDirAndGOPATH(pkgDir string, gopath []string) (string, error) {
 	for _, gp := range gopath {
 		pathUnderGOPATH, err := filepath.Rel(gp, pkgDir)
@@ -35,7 +37,7 @@ func findPackageNameFromDirAndGOPATH(pkgDir string, gopath []string) (string, er
 		return filepath.ToSlash(pathUnderGOPATH[len(srcPrefix):]), nil
 	}
 
-	return "", fmt.Errorf("could not find package name. pkgDir=%q GOPATH=%q", pkgDir, gopath)
+	return "", fmt.Errorf("%w: pkgDir=%q GOPATH=%q", errPackageNameNotFound, pkgDir, gopath)
 }
 
 // From go test -h:
