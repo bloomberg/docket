@@ -19,10 +19,8 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"regexp"
 	"strconv"
 	"testing"
@@ -307,140 +305,6 @@ func parseDocketLabel(svc cmpService) (runGoTest bool, mountGoSources bool, err 
 
 	return false, false,
 		fmt.Errorf("%w: %q : %q", errUnrecognizedDocketLabel, docketLabelKey, labelData)
-}
-
-func doSourceMounts(cfg cmpConfig, goList goList, goPath []string) (args []string, cleanup func() error, err error) {
-	noop := func() error { return nil }
-
-	mountsCfg, err := newMountsCfg(cfg, goList, goPath)
-	if err != nil {
-		return nil, noop, err
-	}
-	if mountsCfg == nil {
-		return nil, noop, nil
-	}
-
-	mountsFile, err := ioutil.TempFile(".", "docket-source-mounts.*.yaml")
-	if err != nil {
-		return nil, noop, fmt.Errorf("failed to create source mounts yaml: %w", err)
-	}
-
-	cleanup = func() error {
-		if os.Getenv("DOCKET_KEEP_MOUNTS_FILE") != "" {
-			tracef("Leaving %s alone\n", mountsFile.Name())
-
-			return nil
-		}
-
-		return os.Remove(mountsFile.Name())
-	}
-
-	defer func() {
-		if closeErr := mountsFile.Close(); closeErr != nil {
-			args = nil
-			err = closeErr
-		}
-	}()
-
-	enc := yaml.NewEncoder(mountsFile)
-
-	defer func() {
-		if closeErr := enc.Close(); closeErr != nil {
-			args = nil
-			err = closeErr
-		}
-	}()
-
-	if err := enc.Encode(mountsCfg); err != nil {
-		return nil, noop, fmt.Errorf("failed to encode yaml: %w", err)
-	}
-
-	return []string{"--file", mountsFile.Name()}, cleanup, nil
-}
-
-var errMultipleGOPATHs = fmt.Errorf("docket doesn't support multipart GOPATHs")
-
-// newMountsCfg makes a cmpConfig to bind mount Go sources.
-func newMountsCfg(originalCfg cmpConfig, goList goList, goPath []string) (*cmpConfig, error) {
-	mountsCfg := cmpConfig{
-		Version:  "3.2",
-		Services: map[string]cmpService{},
-		Networks: nil,
-	}
-
-	needMounts := false
-
-	if len(goPath) != 1 {
-		return nil, errMultipleGOPATHs
-	}
-
-	var mountsSvc cmpService
-	if goList.Module == nil {
-		const goPathTarget = "/go"
-
-		pkgName, err := findPackageNameFromDirAndGOPATH(goList.Dir, goPath)
-		if err != nil {
-			return nil, err
-		}
-
-		mountsSvc = cmpService{
-			Command:     nil,
-			Environment: nil,
-			Image:       "",
-			Labels:      nil,
-			Volumes: []cmpVolume{
-				{
-					Type:   "bind",
-					Source: goPath[0],
-					Target: goPathTarget,
-				},
-			},
-			WorkingDir: fmt.Sprintf("%s/src/%s", goPathTarget, pkgName),
-		}
-	} else {
-		const goPathTarget = "/go"
-		const goModuleDirTarget = "/go-module-dir"
-
-		pathInsideModule, err := filepath.Rel(goList.Module.Dir, goList.Dir)
-		if err != nil {
-			return nil, fmt.Errorf("failed filepath.Rel: %w", err)
-		}
-
-		mountsSvc = cmpService{
-			Command:     nil,
-			Environment: nil,
-			Image:       "",
-			Labels:      nil,
-			Volumes: []cmpVolume{
-				{
-					Type:   "bind",
-					Source: filepath.Join(goPath[0], "pkg", "mod"),
-					Target: fmt.Sprintf("%s/pkg/mod", goPathTarget),
-				},
-				{
-					Type:   "bind",
-					Source: goList.Module.Dir,
-					Target: goModuleDirTarget,
-				},
-			},
-			WorkingDir: fmt.Sprintf("%s/%s", goModuleDirTarget, filepath.ToSlash(pathInsideModule)),
-		}
-	}
-
-	for name, svc := range originalCfg.Services {
-		if _, mountGoSources, err := parseDocketLabel(svc); err != nil {
-			return nil, err
-		} else if mountGoSources {
-			needMounts = true
-			mountsCfg.Services[name] = mountsSvc
-		}
-	}
-
-	if !needMounts {
-		return nil, nil
-	}
-
-	return &mountsCfg, nil
 }
 
 func chainCleanups(a, b func() error) func() error {
