@@ -214,9 +214,9 @@ func (c Compose) Up(ctx context.Context, service ...string) error {
 //------------------------------------------------------------------------------
 
 type cmpVolume struct {
-	Type   string
-	Source string
-	Target string
+	Type   string `yaml:"type"`
+	Source string `yaml:"source"`
+	Target string `yaml:"target"`
 }
 
 type cmpService struct {
