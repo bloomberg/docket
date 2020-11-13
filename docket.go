@@ -103,28 +103,38 @@ func RunPrefix(ctx context.Context, docketCtx *Context, t *testing.T, prefix str
 		*docketCtx = dctx
 	}
 
-	if os.Getenv("DOCKET_PULL") != "" {
-		pullOpts := strings.Fields(os.Getenv("DOCKET_PULL_OPTS"))
-		if err := compose.Pull(ctx, pullOpts); err != nil {
-			t.Fatalf("failed compose.Pull: %v", err)
-		}
-	}
+	docketPull(ctx, t, compose)
 
 	if err := compose.Up(ctx); err != nil {
 		t.Fatalf("failed compose.Up: %v", err)
 	}
 
-	defer func() {
-		if os.Getenv("DOCKET_DOWN") != "" {
-			if err := compose.Down(ctx); err != nil {
-				t.Fatalf("failed compose.Down: %v", err)
-			}
-		} else {
-			fmt.Printf("leaving docker-compose app running...\n")
-		}
-	}()
+	defer docketDown(ctx, t, compose)
 
 	if err := dctx.compose.RunTestfuncOrExecGoTest(ctx, t.Name(), testFunc); err != nil {
 		t.Fatalf("compose.RunTestfuncOrExecGoTest failed: %v", err)
+	}
+}
+
+func docketPull(ctx context.Context, t *testing.T, compose *compose.Compose) {
+	if os.Getenv("DOCKET_PULL") == "" {
+		return
+	}
+
+	pullOpts := strings.Fields(os.Getenv("DOCKET_PULL_OPTS"))
+	if err := compose.Pull(ctx, pullOpts); err != nil {
+		t.Fatalf("failed compose.Pull: %v", err)
+	}
+}
+
+func docketDown(ctx context.Context, t *testing.T, compose *compose.Compose) {
+	if os.Getenv("DOCKET_DOWN") == "" {
+		fmt.Printf("leaving docker-compose app running...\n")
+
+		return
+	}
+
+	if err := compose.Down(ctx); err != nil {
+		t.Fatalf("failed compose.Down: %v", err)
 	}
 }
