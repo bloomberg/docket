@@ -38,7 +38,9 @@ type Compose struct {
 }
 
 // NewCompose returns a new Compose and cleanup function given a context, prefix, and mode.
-func NewCompose(ctx context.Context, prefix, mode string) (cmp *Compose, cleanup func() error, err error) {
+func NewCompose(ctx context.Context, prefix, mode string) (
+	cmp *Compose, cleanup func() error, err error,
+) {
 	cmp = &Compose{}
 	cleanup = func() error { return nil }
 
@@ -155,7 +157,9 @@ func (c Compose) Pull(ctx context.Context, args []string) error {
 
 // RunTestfuncOrExecGoTest either calls testFunc directly or runs `docker-compose exec` to re-run
 // `go test` inside the appropriate service (container).
-func (c Compose) RunTestfuncOrExecGoTest(ctx context.Context, testName string, testFunc func()) error {
+func (c Compose) RunTestfuncOrExecGoTest(
+	ctx context.Context, testName string, testFunc func(),
+) error {
 	if c.testSvc == "" {
 		testFunc()
 
