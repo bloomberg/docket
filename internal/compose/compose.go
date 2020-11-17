@@ -251,7 +251,7 @@ func (c Compose) getAndParseConfig(ctx context.Context) (cmpConfig, error) {
 var errNoMatchingDocketFiles = fmt.Errorf("no matching docket files found")
 
 func makeDocketFileArgs(prefix, mode string) ([]string, error) {
-	files, err := findFiles(prefix, mode)
+	files, err := findAndSortDocketFiles(prefix, mode)
 	if err != nil {
 		return nil, err
 	}

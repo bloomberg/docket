@@ -21,53 +21,7 @@ import (
 	"sort"
 )
 
-// Ordering:
-//   prefix.yaml
-//   prefix.mode.yaml
-//   prefix.mode.extra.yaml
-func filterAndSortFilenames(prefix, mode string, files []string) []string {
-	if prefix == "" || mode == "" {
-		panic("prefix and mode must not be blank!")
-	}
-
-	prefixOnly := []string{}
-	prefixAndMode := []string{}
-	prefixModeAndMore := []string{}
-
-	prefixOnlyPattern := regexp.MustCompile(
-		fmt.Sprintf(`^%s\.ya?ml$`, regexp.QuoteMeta(prefix)))
-
-	modeAndMaybeMorePattern := regexp.MustCompile(
-		fmt.Sprintf(`^%s\.%s\.(.+\.)?ya?ml$`, regexp.QuoteMeta(prefix), regexp.QuoteMeta(mode)))
-
-	for _, f := range files {
-		if prefixOnlyPattern.MatchString(f) {
-			prefixOnly = append(prefixOnly, f)
-
-			continue
-		}
-		if mm := modeAndMaybeMorePattern.FindStringSubmatch(f); mm != nil {
-			if mm[1] == "" {
-				prefixAndMode = append(prefixAndMode, f)
-			} else {
-				prefixModeAndMore = append(prefixModeAndMore, f)
-			}
-
-			continue
-		}
-	}
-
-	sort.Strings(prefixOnly)
-	sort.Strings(prefixAndMode)
-	sort.Strings(prefixModeAndMore)
-
-	results := append(prefixOnly, prefixAndMode...)
-	results = append(results, prefixModeAndMore...)
-
-	return results
-}
-
-func findFiles(prefix, mode string) ([]string, error) {
+func findAndSortDocketFiles(prefix, mode string) ([]string, error) {
 	infos, err := ioutil.ReadDir(".")
 	if err != nil {
 		return nil, fmt.Errorf("failed to read current dir: %w", err)
@@ -75,8 +29,87 @@ func findFiles(prefix, mode string) ([]string, error) {
 
 	files := make([]string, len(infos))
 	for i, info := range infos {
+		if info.IsDir() {
+			continue
+		}
 		files[i] = info.Name()
 	}
 
-	return filterAndSortFilenames(prefix, mode, files), nil
+	fs := newFileSorter(prefix, mode)
+	fs.AddFiles(files)
+
+	return fs.Results(), nil
+}
+
+// Ordering:
+//   prefix.yaml
+//   prefix.mode.yaml
+//   prefix.mode.extra.yaml
+type fileSorter struct {
+	prefixOnly        []string
+	prefixAndMode     []string
+	prefixModeAndMore []string
+
+	prefixOnlyPattern       *regexp.Regexp
+	modeAndMaybeMorePattern *regexp.Regexp
+}
+
+func newFileSorter(prefix, mode string) *fileSorter {
+	if prefix == "" {
+		panic("prefix must not be empty!")
+	}
+	if mode == "" {
+		panic("mode must not be empty!")
+	}
+
+	return &fileSorter{
+		prefixOnly:        nil,
+		prefixAndMode:     nil,
+		prefixModeAndMore: nil,
+
+		prefixOnlyPattern: regexp.MustCompile(fmt.Sprintf(`^%s\.ya?ml$`,
+			regexp.QuoteMeta(prefix))),
+
+		modeAndMaybeMorePattern: regexp.MustCompile(fmt.Sprintf(`^%s\.%s\.(.+\.)?ya?ml$`,
+			regexp.QuoteMeta(prefix), regexp.QuoteMeta(mode))),
+	}
+}
+
+func (fs *fileSorter) AddFiles(files []string) {
+	for _, f := range files {
+		fs.AddFile(f)
+	}
+}
+
+func (fs *fileSorter) AddFile(f string) {
+	if fs.prefixOnlyPattern.MatchString(f) {
+		fs.prefixOnly = append(fs.prefixOnly, f)
+
+		return
+	}
+
+	mm := fs.modeAndMaybeMorePattern.FindStringSubmatch(f)
+	if mm == nil {
+		return
+	}
+
+	switch mm[1] {
+	case "":
+		fs.prefixAndMode = append(fs.prefixAndMode, f)
+	default:
+		fs.prefixModeAndMore = append(fs.prefixModeAndMore, f)
+	}
+}
+
+func (fs *fileSorter) Results() []string {
+	sort.Strings(fs.prefixOnly)
+	sort.Strings(fs.prefixAndMode)
+	sort.Strings(fs.prefixModeAndMore)
+
+	results := make([]string, 0, len(fs.prefixOnly)+len(fs.prefixAndMode)+len(fs.prefixModeAndMore))
+	results = append(results, fs.prefixOnly...)
+	results = append(results, fs.prefixAndMode...)
+	results = append(results, fs.prefixModeAndMore...)
+
+	return results
 }
