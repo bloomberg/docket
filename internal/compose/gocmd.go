@@ -28,7 +28,12 @@ func runGoEnvGOPATH(ctx context.Context) ([]string, error) {
 	cmd := exec.CommandContext(ctx, "go", "env", "GOPATH") // #nosec
 	out, err := cmd.Output()
 	if err != nil {
-		return nil, err
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
+			return nil, fmt.Errorf("failed go env GOPATH: %w: %s", exitErr, exitErr.Stderr)
+		}
+
+		return nil, fmt.Errorf("failed 'go env GOPATH': %w", err)
 	}
 
 	return filepath.SplitList(strings.TrimSpace(string(out))), nil
@@ -49,16 +54,15 @@ func runGoList(ctx context.Context) (goList, error) {
 	if err != nil {
 		var exitErr *exec.ExitError
 		if errors.As(err, &exitErr) {
-			return goList{}, fmt.Errorf(
-				"'go list -json' exited with %d: %s", exitErr.ExitCode(), exitErr.Stderr)
+			return goList{}, fmt.Errorf("failed go list -json: %w: %s", exitErr, exitErr.Stderr)
 		}
 
-		return goList{}, err
+		return goList{}, fmt.Errorf("failed go list -json: %w", err)
 	}
 
 	var gl goList
 	if err := json.Unmarshal(out, &gl); err != nil {
-		return goList{}, err
+		return goList{}, fmt.Errorf("failed json.Unmarshal: %w", err)
 	}
 
 	return gl, nil

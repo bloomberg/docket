@@ -45,12 +45,12 @@ Optional environment variables:
     If non-empty, docket will run 'docker-compose pull' before each suite.
 
 `[1:])).Execute(out, nil)
-
 	if err != nil {
 		panic(fmt.Sprintf("failed to Execute help template: %v", err))
 	}
 }
 
+//nolint:gochecknoinits // This seems to be the only way to get a flag added to go test's help.
 func init() {
 	// We register a flag to get it shown in the default usage.
 	//
@@ -66,7 +66,9 @@ func init() {
 	for _, arg := range os.Args {
 		if arg == "-help-docket" || arg == "--help-docket" {
 			writeHelp(os.Stderr)
-			os.Exit(2)
+
+			const helpExitCode = 2 // This matches what 'go test -h' returns.
+			os.Exit(helpExitCode)
 		}
 	}
 }

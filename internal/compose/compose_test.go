@@ -12,13 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package compose
+package compose_test
 
 import (
 	"context"
 	"os"
 	"testing"
 
+	"github.com/bloomberg/docket/internal/compose"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -41,7 +42,8 @@ func Test_Compose(t *testing.T) {
 	}()
 
 	suite.Run(t, &ComposeSuite{
-		ctx: context.Background(),
+		Suite: suite.Suite{},
+		ctx:   context.Background(),
 	})
 }
 
@@ -52,7 +54,7 @@ type ComposeSuite struct {
 }
 
 func (s *ComposeSuite) Test_BadConfig_MissingImage() {
-	cmp, cleanup, err := NewCompose(s.ctx, "docket.bad-config.missing-image", "no-mode")
+	cmp, cleanup, err := compose.NewCompose(s.ctx, "docket.bad-config.missing-image", "no-mode")
 	s.Error(err)
 	s.Regexp("Compose file is invalid", err)
 	s.Nil(cmp)
@@ -60,7 +62,7 @@ func (s *ComposeSuite) Test_BadConfig_MissingImage() {
 }
 
 func (s *ComposeSuite) Test_BadConfig_MultipleTestServices() {
-	cmp, cleanup, err := NewCompose(s.ctx, "docket.bad-config.multiple-test-services", "no-mode")
+	cmp, cleanup, err := compose.NewCompose(s.ctx, "docket.bad-config.multiple-test-services", "no-mode")
 	s.Error(err)
 	s.Regexp("multiple test services found", err)
 	s.Nil(cmp)
@@ -68,15 +70,15 @@ func (s *ComposeSuite) Test_BadConfig_MultipleTestServices() {
 }
 
 func (s *ComposeSuite) Test_CannotFindDocketFiles() {
-	cmp, cleanup, err := NewCompose(s.ctx, "docket.nonExistentPrefix", "no-mode")
+	cmp, cleanup, err := compose.NewCompose(s.ctx, "docket.nonExistentPrefix", "no-mode")
 	s.Error(err)
-	s.Regexp("did not find any files", err)
+	s.Regexp("no matching docket files found", err)
 	s.Nil(cmp)
 	s.NoError(cleanup())
 }
 
 func (s *ComposeSuite) Test_PullWithoutImage() {
-	cmp, cleanup, err := NewCompose(s.ctx, "docket.blank", "no-mode")
+	cmp, cleanup, err := compose.NewCompose(s.ctx, "docket.blank", "no-mode")
 	defer func() { s.NoError(cleanup()) }()
 	s.NoError(err)
 	s.Require().NotNil(cmp)
@@ -85,7 +87,7 @@ func (s *ComposeSuite) Test_PullWithoutImage() {
 }
 
 func (s *ComposeSuite) Test_GetPort() {
-	cmp, cleanup, err := NewCompose(s.ctx, "docket.published-ports", "full")
+	cmp, cleanup, err := compose.NewCompose(s.ctx, "docket.published-ports", "full")
 	defer func() { s.NoError(cleanup()) }()
 	s.NoError(err)
 	s.Require().NotNil(cmp)
@@ -105,7 +107,7 @@ func (s *ComposeSuite) Test_GetPort() {
 }
 
 func (s *ComposeSuite) Test_RunTestsLocally() {
-	cmp, cleanup, err := NewCompose(s.ctx, "docket.blank", "no-mode")
+	cmp, cleanup, err := compose.NewCompose(s.ctx, "docket.blank", "no-mode")
 	defer func() { s.NoError(cleanup()) }()
 	s.NoError(err)
 	s.Require().NotNil(cmp)
@@ -114,7 +116,7 @@ func (s *ComposeSuite) Test_RunTestsLocally() {
 }
 
 func (s *ComposeSuite) Test_RunTestfuncOrExecGoTest() {
-	cmp, cleanup, err := NewCompose(s.ctx, "docket.test-service", "full")
+	cmp, cleanup, err := compose.NewCompose(s.ctx, "docket.test-service", "full")
 	defer func() { s.NoError(cleanup()) }()
 	s.NoError(err)
 	s.Require().NotNil(cmp)
@@ -129,7 +131,7 @@ func (s *ComposeSuite) Test_RunTestfuncOrExecGoTest() {
 }
 
 func (s *ComposeSuite) Test_RunTestfuncOrExecGoTest_StringCommand() {
-	cmp, cleanup, err := NewCompose(s.ctx, "docket.test-service", "string-command")
+	cmp, cleanup, err := compose.NewCompose(s.ctx, "docket.test-service", "string-command")
 	defer func() { s.NoError(cleanup()) }()
 	s.NoError(err)
 	s.Require().NotNil(cmp)
@@ -144,7 +146,7 @@ func (s *ComposeSuite) Test_RunTestfuncOrExecGoTest_StringCommand() {
 }
 
 func (s *ComposeSuite) Test_RunTestfuncOrExecGoTest_FailsWithABadPath() {
-	cmp, cleanup, err := NewCompose(s.ctx, "docket.test-service", "go-not-in-path")
+	cmp, cleanup, err := compose.NewCompose(s.ctx, "docket.test-service", "go-not-in-path")
 	defer func() { s.NoError(cleanup()) }()
 	s.NoError(err)
 	s.Require().NotNil(cmp)

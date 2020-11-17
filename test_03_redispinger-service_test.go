@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package docket
+package docket_test
 
 import (
 	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"os"
@@ -34,7 +35,8 @@ func Test_03_redispinger_service(t *testing.T) {
 	}
 
 	suite.Run(t, &RedisPingerSuite{
-		dir: filepath.Join("testdata", "03_redispinger-service"),
+		Suite: suite.Suite{},
+		dir:   filepath.Join("testdata", "03_redispinger-service"),
 	})
 }
 
@@ -111,7 +113,8 @@ func (s *RedisPingerSuite) runDkt(ctx context.Context, arg ...string) []byte {
 
 	out, err := cmd.Output()
 	if err != nil {
-		if exitErr, ok := err.(*exec.ExitError); ok {
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
 			s.T().Logf("err: %v, stdout: %s, stderr: %s", err, out, exitErr.Stderr)
 		} else {
 			s.T().Logf("err: %v, stdout: %s", err, out)

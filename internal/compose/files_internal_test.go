@@ -88,7 +88,9 @@ func (s *FilesSuite) Test_filterAndSortFilenames() {
 			filterAndSortFilenames(c.prefix, c.mode, c.files),
 			fmt.Sprintf("prefix=%q mode=%q", c.prefix, c.mode))
 	}
+}
 
+func (s *FilesSuite) Test_filterAndSortFilenames_panics_when_missing_mode_or_prefix() {
 	s.Panics(func() { filterAndSortFilenames("", "mode", nil) }, "empty prefix panics")
 	s.Panics(func() { filterAndSortFilenames("prefix", "", nil) }, "empty mode panics")
 }

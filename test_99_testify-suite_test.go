@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package docket
+package docket_test
 
 import (
 	"bufio"
@@ -34,7 +34,8 @@ func Test_99_testify_suite(t *testing.T) {
 	}
 
 	suite.Run(t, &TestifySuiteSuite{
-		dir: filepath.Join("testdata", "99_testify-suite"),
+		Suite: suite.Suite{},
+		dir:   filepath.Join("testdata", "99_testify-suite"),
 	})
 }
 
@@ -85,10 +86,10 @@ func (s *TestifySuiteSuite) runGoTest(ctx context.Context, arg ...string) []byte
 	return out
 }
 
-// Either run ONLY subtestA or everything EXCEPT subtestA
-func (s *TestifySuiteSuite) testSubtestA(ctx context.Context, includeA bool) (output []byte,
-	sawA, sawB, sawC, sawOthers bool) {
-
+// Helper routine that either runs ONLY subtestA or everything EXCEPT subtestA.
+func (s *TestifySuiteSuite) testSubtestA(ctx context.Context, includeA bool) (
+	output []byte, sawA, sawB, sawC, sawOthers bool,
+) {
 	negation := ""
 	if !includeA {
 		negation = "^"
@@ -119,5 +120,5 @@ func (s *TestifySuiteSuite) testSubtestA(ctx context.Context, includeA bool) (ou
 		}
 	}
 
-	return
+	return output, sawA, sawB, sawC, sawOthers
 }
