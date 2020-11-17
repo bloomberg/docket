@@ -12,20 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Command dkt runs docker-compose with a set of docket files.
+// This package contains the actual implementation of the dkt command.
 //
-// Usage:
+// You probably don't want to run or install this program directly.
 //
-//     dkt [OPTIONS] [arguments to docker-compose...]
-//
-// Options:
-//
-//     -h, --help            Show this help
-//     -v, --version         Show version information
-//     -m, --mode=MODE       Set the docket mode (required) [$DOCKET_MODE]
-//     -P, --prefix=PREFIX   Set the docket prefix (default: docket) [$DOCKET_PREFIX]
-//
-// See https://github.com/bloomberg/docket/dkt for more documentation.
+// See https://github.com/bloomberg/docket/tree/main/dkt for more documentation.
 //
 package main
 
@@ -169,10 +160,10 @@ func printVersions(stdout io.Writer) int {
 	if buildInfo, ok := debug.ReadBuildInfo(); ok {
 		mainMod := buildInfo.Main
 		fmt.Fprintf(stdout,
-			"dkt from %s %s (%s)\n", mainMod.Path, mainMod.Version, runtime.Version())
+			"dkt/main from %s %s (%s)\n", mainMod.Path, mainMod.Version, runtime.Version())
 	} else {
 		fmt.Fprintf(stdout,
-			"dkt from github.com/bloomberg/docket in GOPATH (%s)\n", runtime.Version())
+			"dkt/main from github.com/bloomberg/docket in GOPATH (%s)\n", runtime.Version())
 	}
 
 	return runDockerComposeDirectly(nil, stdout, nil, "version")

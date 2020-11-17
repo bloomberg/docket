@@ -71,7 +71,7 @@ func (s *dktSuite) Test_version() {
 
 			assert := assert.New(t)
 			assert.Zero(exitCode)
-			assert.Contains(stdout.String(), "dkt from github.com")
+			assert.Contains(stdout.String(), "dkt/main from github.com")
 			assert.Contains(stdout.String(), "docker-compose")
 			assert.Empty(stderr.String())
 		})
