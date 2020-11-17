@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pingredis
+package pingredis_test
 
 import (
 	"context"
@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/bloomberg/docket"
+	pingredis "github.com/bloomberg/docket/testdata/02_ping-redis"
 )
 
 // TestPingRedis tests the pingRedis function.
@@ -55,11 +56,15 @@ func testPingRedis(t *testing.T, dctx *docket.Context) {
 
 	t.Logf("redisAddr = %q", redisAddr)
 
-	pong, err := PingRedis(redisAddr)
+	pong, err := pingredis.Ping(redisAddr)
 
 	t.Logf("pong = %q", pong)
 
 	if err != nil {
 		t.Fatalf("failed to ping redis: %v", err)
+	}
+
+	if pong != "PONG" {
+		t.Fatalf(`expected "PONG" but received %q`, pong)
 	}
 }

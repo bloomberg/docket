@@ -15,12 +15,43 @@
 package pingredis
 
 import (
-	"github.com/go-redis/redis/v7"
+	"bufio"
+	"fmt"
+	"net"
 )
 
-// PingRedis pings the Redis instance at redisAddr.
-func PingRedis(redisAddr string) (string, error) {
-	client := redis.NewClient(&redis.Options{Addr: redisAddr})
+var ErrUnexpectedResponse = fmt.Errorf("unexpected response")
 
-	return client.Ping().Result()
+// Ping pings the Redis instance at redisAddr.
+//
+// This code is for demonstration purposes only.
+// For production-worthy code, you should use an established redis client library.
+//
+func Ping(redisAddr string) (string, error) {
+	conn, err := net.Dial("tcp", redisAddr)
+	if err != nil {
+		return "", fmt.Errorf("net.Dial failed: %w", err)
+	}
+	defer conn.Close()
+
+	_, err = fmt.Fprintf(conn, "PING\r\n")
+	if err != nil {
+		return "", fmt.Errorf("failed to write: %w", err)
+	}
+
+	scanner := bufio.NewScanner(conn)
+	var pong string
+	for pong == "" && scanner.Scan() {
+		line := scanner.Text()
+		if line[0] != '+' {
+			return "", fmt.Errorf("%w: %q", ErrUnexpectedResponse, line)
+		}
+
+		pong = line[1:]
+	}
+	if err := scanner.Err(); err != nil {
+		return "", fmt.Errorf("scanner error: %w", err)
+	}
+
+	return pong, nil
 }
