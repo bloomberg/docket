@@ -1,6 +1,6 @@
 # Ping Redis Function
 
-This `pingredis` module provides a simple function that pings a Redis server
+This `pingredis` package provides a simple function that pings a Redis server
 address and returns the result.
 
 ## Docket modes
