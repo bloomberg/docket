@@ -26,6 +26,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/bloomberg/docket/internal/tempbuild"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -49,8 +50,12 @@ type RedisPingerSuite struct {
 func (s *RedisPingerSuite) Test_DebugMode() {
 	ctx := context.Background()
 
+	dktPath, err := tempbuild.Build("github.com/bloomberg/docket/dkt", "dkt.")
+	s.Require().NoError(err)
+	defer os.Remove(dktPath)
+
 	dkt := func(arg ...string) []byte {
-		return s.runDkt(ctx, append([]string{"--mode=debug"}, arg...)...)
+		return s.runDkt(ctx, dktPath, append([]string{"--mode=debug"}, arg...)...)
 	}
 
 	// Bring up docker compose app and discover redis's port
@@ -105,9 +110,8 @@ func (s *RedisPingerSuite) Test_FullMode() {
 
 //------------------------------------------------------------------------------
 
-func (s *RedisPingerSuite) runDkt(ctx context.Context, arg ...string) []byte {
-	cmd := exec.CommandContext(ctx, "go", "run", "github.com/bloomberg/docket/dkt")
-	cmd.Args = append(cmd.Args, arg...)
+func (s *RedisPingerSuite) runDkt(ctx context.Context, exePath string, arg ...string) []byte {
+	cmd := exec.CommandContext(ctx, exePath, arg...)
 	cmd.Dir = s.dir
 	cmd.Env = os.Environ()
 

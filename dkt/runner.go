@@ -20,12 +20,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"os/signal"
 	"runtime"
 	"runtime/debug"
+
+	"github.com/bloomberg/docket/internal/tempbuild"
 )
 
 const actualMainPkg = "github.com/bloomberg/docket/dkt/main"
@@ -66,7 +67,10 @@ func run(
 		printRunnerBuildInfo("", stdout)
 	}
 
-	dktExePath, err := buildDkt(stderr, debugTraceEnabled)
+	if debugTraceEnabled {
+		fmt.Fprintf(stderr, "%sbuilding %s\n", debugPrefix, actualMainPkg)
+	}
+	dktExePath, err := tempbuild.Build(actualMainPkg, "dkt.")
 	if err != nil {
 		fmt.Fprintf(stderr, "ERROR: failed to build dkt: %v\n", err)
 		fmt.Fprintf(stderr, "--- diagnostics follow ---\n")
@@ -83,26 +87,6 @@ func run(
 	}
 
 	return runDkt(stdin, stdout, stderr, dktExePath, args)
-}
-
-func buildDkt(stderr io.Writer, debugTraceEnabled bool) (dktExePath string, err error) {
-	f, err := ioutil.TempFile("", "dkt.")
-	if err != nil {
-		return "", fmt.Errorf("could not create temp file: %w", err)
-	}
-
-	dktExePath = f.Name()
-	f.Close()
-
-	build := exec.Command("go", "build", "-o", dktExePath, actualMainPkg)
-	if debugTraceEnabled {
-		fmt.Fprintf(stderr, "%s%v\n", debugPrefix, build.Args)
-	}
-	if out, err := build.CombinedOutput(); err != nil {
-		return "", fmt.Errorf("failed to build %s: %w: %s", actualMainPkg, err, out)
-	}
-
-	return dktExePath, nil
 }
 
 func runDkt(stdin io.Reader, stdout, stderr io.Writer, dktExePath string, args []string) int {
