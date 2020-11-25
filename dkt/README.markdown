@@ -77,9 +77,17 @@ cd
 rm -rf "$dktdir"
 ```
 
-If you have docket inside your `$GOPATH/src` tree, you can run it on the fly
-using `go run`:
+### Keeping in sync with your version of docket
 
-```sh
-go run github.com/bloomberg/docket/dkt
-```
+The `dkt` program in this directory forwards its arguments to the program in
+`dkt/main`, which makes calls to docket's packages.
+
+The reason for this forwarding implementation is to keep behavior in sync
+between the `docket` package and `dkt`. The installed `dkt` program runs the
+real `dkt` implementation that it finds inside the `docket` package you're
+already using (either via a module or your `GOPATH`).
+
+This means that you should not have to worry about updating the installed `dkt`
+program every time docket makes small changes, though it is possible that
+backwards-incompatible changes some day will require installing a newer version
+of `dkt`.
