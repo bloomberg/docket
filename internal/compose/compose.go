@@ -82,7 +82,7 @@ func NewCompose(ctx context.Context, prefix, mode string) (
 //
 // Command is intended to be a helper function. It is exported mainly so `dkt` can use it.
 func (c Compose) Command(ctx context.Context, arg ...string) *exec.Cmd {
-	cmd := exec.CommandContext(ctx, "docker-compose") // #nosec
+	cmd := exec.CommandContext(ctx, "docker-compose")
 	cmd.Args = append(cmd.Args, c.baseArgs...)
 	cmd.Args = append(cmd.Args, arg...)
 	cmd.Env = os.Environ()

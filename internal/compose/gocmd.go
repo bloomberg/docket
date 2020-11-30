@@ -25,7 +25,7 @@ import (
 )
 
 func runGoEnvGOPATH(ctx context.Context) ([]string, error) {
-	cmd := exec.CommandContext(ctx, "go", "env", "GOPATH") // #nosec
+	cmd := exec.CommandContext(ctx, "go", "env", "GOPATH")
 	out, err := cmd.Output()
 	if err != nil {
 		var exitErr *exec.ExitError
@@ -49,7 +49,7 @@ type goList struct {
 }
 
 func runGoList(ctx context.Context) (goList, error) {
-	cmd := exec.CommandContext(ctx, "go", "list", "-json") // #nosec
+	cmd := exec.CommandContext(ctx, "go", "list", "-json")
 	out, err := cmd.Output()
 	if err != nil {
 		var exitErr *exec.ExitError
