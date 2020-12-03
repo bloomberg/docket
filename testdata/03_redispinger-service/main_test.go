@@ -12,13 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package main_test
 
 import (
 	"context"
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/bloomberg/docket"
@@ -46,21 +47,23 @@ func makeServiceRequest(t *testing.T) {
 	t.Logf("pingerURL = %q", pingerURL)
 
 	resp, err := http.Get(pingerURL)
-
 	if err != nil {
 		t.Fatalf("failed http.Get to %v: %v", pingerURL, err)
 	}
+	defer resp.Body.Close()
 
 	t.Logf("response = %#v", resp)
 
-	defer resp.Body.Close()
-	if body, err := ioutil.ReadAll(resp.Body); err != nil {
-		t.Logf("could not read body: %v", err)
-	} else {
-		t.Logf("body: %q", body)
-	}
-
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("non-%v response code %v", http.StatusOK, resp.StatusCode)
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("could not read body: %v", err)
+	}
+
+	if strings.TrimSpace(string(body)) != "PONG" {
+		t.Fatalf("expected PONG response but got %q", body)
 	}
 }

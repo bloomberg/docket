@@ -1,8 +1,9 @@
 # Redis Pinger Service
 
-This Redis Pinger Service uses the `pingredis` module from the previous
-[`02_ping-redis`](../02_ping-redis) example and exposes the functionality as an
-HTTP service.
+This Redis Pinger Service is an HTTP service that allows clients to ping a Redis
+instance. It uses the `pingredis` package from
+[the previous example in `02_ping-redis`](../02_ping-redis) in its
+implementation.
 
 This example looks more like a system/integration test: the test makes a real
 HTTP request to a real HTTP service.
