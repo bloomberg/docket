@@ -47,7 +47,6 @@ func (s *HelloSuite) Test_FailsOutsideDocker() {
 	cmd.Args = append(cmd.Args, goTestCoverageArgs(s.T().Name())...)
 	cmd.Args = append(cmd.Args, goTestRaceDetectorArgs()...)
 	cmd.Dir = s.dir
-	cmd.Env = os.Environ()
 
 	out, err := cmd.CombinedOutput()
 	if err == nil {
