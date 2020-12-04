@@ -55,7 +55,7 @@ func (s *RedisPingerSuite) Test_DebugMode() {
 	defer os.Remove(dktPath)
 
 	dkt := func(arg ...string) []byte {
-		return s.runDkt(ctx, dktPath, append([]string{"--mode=debug"}, arg...)...)
+		return s.runDkt(dktPath, append([]string{"--mode=debug"}, arg...)...)
 	}
 
 	// Bring up docker compose app and discover redis's port
@@ -69,7 +69,7 @@ func (s *RedisPingerSuite) Test_DebugMode() {
 
 	// Start a pinger service and discover its listener port
 
-	pingerCmd, pingerPort := s.startPinger(ctx)
+	pingerCmd, pingerPort := s.startPinger()
 	defer func() {
 		s.Require().NoError(pingerCmd.Process.Kill())
 		s.Error(pingerCmd.Wait()) // since we killed the process, Wait will return an error
@@ -77,7 +77,7 @@ func (s *RedisPingerSuite) Test_DebugMode() {
 
 	// Run go test with REDISPINGER_URL set properly
 
-	testCmd := exec.CommandContext(ctx, "go", "test", "-v")
+	testCmd := exec.Command("go", "test", "-v")
 	testCmd.Args = append(testCmd.Args, goTestCoverageArgs(s.T().Name())...)
 	testCmd.Args = append(testCmd.Args, goTestRaceDetectorArgs()...)
 	testCmd.Dir = s.dir
@@ -95,7 +95,7 @@ func (s *RedisPingerSuite) Test_DebugMode() {
 }
 
 func (s *RedisPingerSuite) Test_FullMode() {
-	cmd := exec.CommandContext(context.Background(), "go", "test", "-v")
+	cmd := exec.Command("go", "test", "-v")
 	cmd.Args = append(cmd.Args, goTestCoverageArgs(s.T().Name())...)
 	cmd.Args = append(cmd.Args, goTestRaceDetectorArgs()...)
 	cmd.Dir = s.dir
@@ -110,8 +110,8 @@ func (s *RedisPingerSuite) Test_FullMode() {
 
 //------------------------------------------------------------------------------
 
-func (s *RedisPingerSuite) runDkt(ctx context.Context, exePath string, arg ...string) []byte {
-	cmd := exec.CommandContext(ctx, exePath, arg...)
+func (s *RedisPingerSuite) runDkt(exePath string, arg ...string) []byte {
+	cmd := exec.Command(exePath, arg...)
 	cmd.Dir = s.dir
 
 	out, err := cmd.Output()
@@ -128,8 +128,8 @@ func (s *RedisPingerSuite) runDkt(ctx context.Context, exePath string, arg ...st
 	return out
 }
 
-func (s *RedisPingerSuite) startPinger(ctx context.Context) (cmd *exec.Cmd, port string) {
-	cmd = exec.CommandContext(ctx, "go", "run", ".")
+func (s *RedisPingerSuite) startPinger() (cmd *exec.Cmd, port string) {
+	cmd = exec.Command("go", "run", ".")
 	cmd.Dir = s.dir
 
 	stdout, err := cmd.StdoutPipe()

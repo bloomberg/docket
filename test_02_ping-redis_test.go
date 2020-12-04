@@ -15,7 +15,6 @@
 package docket_test
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -43,17 +42,17 @@ type PingRedisSuite struct {
 }
 
 func (s *PingRedisSuite) Test_DebugMode() {
-	s.testMode(context.Background(), "debug")
+	s.testMode("debug")
 }
 
 func (s *PingRedisSuite) Test_FullMode() {
-	s.testMode(context.Background(), "full")
+	s.testMode("full")
 }
 
 //------------------------------------------------------------------------------
 
-func (s *PingRedisSuite) testMode(ctx context.Context, mode string) {
-	cmd := exec.CommandContext(ctx, "go", "test", "-v")
+func (s *PingRedisSuite) testMode(mode string) {
+	cmd := exec.Command("go", "test", "-v")
 	cmd.Args = append(cmd.Args, goTestCoverageArgs(s.T().Name())...)
 	cmd.Args = append(cmd.Args, goTestRaceDetectorArgs()...)
 	cmd.Dir = s.dir
