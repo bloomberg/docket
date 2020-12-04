@@ -87,7 +87,7 @@ start of each `docket.Run()`.
 
 #### DOCKET_PULL_OPTS
 
-_Default:_ ``
+_Default:_ none
 
 If `DOCKET_PULL_OPTS` is non-empty, docket will add its contents to the
 invocation of the `docker-compose pull` command.
