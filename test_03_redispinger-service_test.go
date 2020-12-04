@@ -50,7 +50,7 @@ type RedisPingerSuite struct {
 func (s *RedisPingerSuite) Test_DebugMode() {
 	ctx := context.Background()
 
-	dktPath, err := tempbuild.Build("github.com/bloomberg/docket/dkt", "dkt.")
+	dktPath, err := tempbuild.Build(ctx, "github.com/bloomberg/docket/dkt", "dkt.")
 	s.Require().NoError(err)
 	defer os.Remove(dktPath)
 
