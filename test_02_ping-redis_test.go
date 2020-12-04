@@ -15,52 +15,45 @@
 package docket_test
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"testing"
 
-	"github.com/stretchr/testify/suite"
+	"github.com/bloomberg/go-testgroup"
 )
 
 func Test_02_ping_redis(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping docker-dependent test suite in short mode")
+		t.Skip("skipping docker-dependent tests in short mode")
 	}
 
-	suite.Run(t, &PingRedisSuite{
-		Suite: suite.Suite{},
-		dir:   filepath.Join("testdata", "02_ping-redis"),
+	testgroup.RunSerially(t, &PingRedisTests{
+		dir: filepath.Join("testdata", "02_ping-redis"),
 	})
 }
 
-type PingRedisSuite struct {
-	suite.Suite
-
+type PingRedisTests struct {
 	dir string
 }
 
-func (s *PingRedisSuite) Test_DebugMode() {
-	s.testMode("debug")
+func (grp *PingRedisTests) DebugMode(t *testgroup.T) {
+	grp.testMode(t, "debug")
 }
 
-func (s *PingRedisSuite) Test_FullMode() {
-	s.testMode("full")
+func (grp *PingRedisTests) FullMode(t *testgroup.T) {
+	grp.testMode(t, "full")
 }
 
 //------------------------------------------------------------------------------
 
-func (s *PingRedisSuite) testMode(mode string) {
+func (grp *PingRedisTests) testMode(t *testgroup.T, mode string) {
 	cmd := exec.Command("go", "test", "-v")
-	cmd.Args = append(cmd.Args, goTestCoverageArgs(s.T().Name())...)
+	cmd.Args = append(cmd.Args, goTestCoverageArgs(t.Name())...)
 	cmd.Args = append(cmd.Args, goTestRaceDetectorArgs()...)
-	cmd.Dir = s.dir
+	cmd.Dir = grp.dir
 	cmd.Env = append(os.Environ(), "DOCKET_MODE="+mode, "DOCKET_DOWN=1")
 
 	out, err := cmd.CombinedOutput()
-	if err != nil {
-		fmt.Printf("%s", out)
-	}
-	s.NoError(err)
+	t.NoErrorf(err, "output: %q", out)
 }

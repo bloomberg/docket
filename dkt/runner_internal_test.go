@@ -19,34 +19,32 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/suite"
+	"github.com/bloomberg/go-testgroup"
 )
 
 func Test_dkt_runner(t *testing.T) {
-	suite.Run(t, &dktRunnerSuite{})
+	testgroup.RunSerially(t, &dktRunnerTests{}) // cannot parallelize due to chdir
 }
 
-type dktRunnerSuite struct {
-	suite.Suite
-}
+type dktRunnerTests struct{}
 
-func (s *dktRunnerSuite) Test_version() {
+func (grp *dktRunnerTests) Version(t *testgroup.T) {
 	var stdout, stderr strings.Builder
 
 	debugTraceEnabled := false
 	keepExecutable := false
 	exitCode := run(debugTraceEnabled, keepExecutable, nil, &stdout, &stderr, "--version")
 
-	s.Zero(exitCode)
-	s.Contains(stdout.String(), "dkt runner")
-	s.Contains(stdout.String(), "dkt/main")
-	s.Contains(stdout.String(), "docker-compose")
+	t.Zero(exitCode)
+	t.Contains(stdout.String(), "dkt runner")
+	t.Contains(stdout.String(), "dkt/main")
+	t.Contains(stdout.String(), "docker-compose")
 }
 
-func (s *dktRunnerSuite) Test_config() {
-	s.Require().NoError(os.Chdir("testdata"))
+func (grp *dktRunnerTests) Config(t *testgroup.T) {
+	t.Require.NoError(os.Chdir("testdata"))
 	defer func() {
-		s.NoError(os.Chdir(".."))
+		t.NoError(os.Chdir(".."))
 	}()
 
 	var stdout strings.Builder
@@ -55,14 +53,14 @@ func (s *dktRunnerSuite) Test_config() {
 	keepExe := false
 	exitCode := run(debugTrace, keepExe, nil, &stdout, nil, "--mode=good", "config")
 
-	s.Zero(exitCode)
-	s.Contains(stdout.String(), "version")
+	t.Zero(exitCode)
+	t.Contains(stdout.String(), "version")
 }
 
-func (s *dktRunnerSuite) Test_debugTrace() {
-	s.Require().NoError(os.Chdir("testdata"))
+func (grp *dktRunnerTests) DebugTrace(t *testgroup.T) {
+	t.Require.NoError(os.Chdir("testdata"))
 	defer func() {
-		s.NoError(os.Chdir(".."))
+		t.NoError(os.Chdir(".."))
 	}()
 
 	var stdout, stderr strings.Builder
@@ -71,11 +69,11 @@ func (s *dktRunnerSuite) Test_debugTrace() {
 	keepExe := false
 	exitCode := run(debugTrace, keepExe, nil, &stdout, &stderr, "--mode=good", "config")
 
-	s.Zero(exitCode)
+	t.Zero(exitCode)
 
-	s.Contains(stdout.String(), "version")
+	t.Contains(stdout.String(), "version")
 
-	s.Contains(stderr.String(), debugPrefix+"dkt runner")
-	s.Regexp(debugPrefix+"(current module|not in module-aware mode)", stderr.String())
-	s.Regexp(debugPrefix+"(found dkt module|found dkt inside the GOPATH)", stderr.String())
+	t.Contains(stderr.String(), debugPrefix+"dkt runner")
+	t.Regexp(debugPrefix+"(current module|not in module-aware mode)", stderr.String())
+	t.Regexp(debugPrefix+"(found dkt module|found dkt inside the GOPATH)", stderr.String())
 }

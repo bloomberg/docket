@@ -1,4 +1,4 @@
-// Copyright 2019 Bloomberg Finance L.P.
+// Copyright 2020 Bloomberg Finance L.P.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,60 +20,57 @@ import (
 	"testing"
 
 	"github.com/bloomberg/docket"
-	"github.com/stretchr/testify/suite"
+	"github.com/bloomberg/go-testgroup"
 )
 
 //----------------------------------------------------------
 
-// This suite is intended to run entirely inside docker.
+// This test group is intended to run entirely inside docker.
 func TestDocketRunAtTopLevel(t *testing.T) {
 	ctx := context.Background()
 
-	var s EntireSuite
-
-	docket.Run(ctx, &s.Context, t, func() { suite.Run(t, &s) })
+	var grp EntireGroup
+	docket.Run(ctx, &grp.dctx, t, func() { testgroup.RunSerially(t, &grp) })
 }
 
-type EntireSuite struct {
-	suite.Suite
-	docket.Context
+type EntireGroup struct {
+	dctx docket.Context
 }
 
 // The following three redundant tests exist so that the docket test suite can test executing
 // particular combinations of subtests of the suite.
 
-func (s *EntireSuite) TestA() {
-	s.T().Logf("docket mode = %q", s.Mode())
-	s.Equal("something", os.Getenv("SECRET_VALUE"))
+func (grp *EntireGroup) A(t *testgroup.T) {
+	t.Logf("docket mode = %q", grp.dctx.Mode())
+	t.Equal("something", os.Getenv("SECRET_VALUE"))
 }
 
-func (s *EntireSuite) TestB() {
-	s.Equal("something", os.Getenv("SECRET_VALUE"))
+func (grp *EntireGroup) B(t *testgroup.T) {
+	t.Equal("something", os.Getenv("SECRET_VALUE"))
 }
 
-func (s *EntireSuite) TestC() {
-	s.Equal("something", os.Getenv("SECRET_VALUE"))
+func (grp *EntireGroup) C(t *testgroup.T) {
+	t.Equal("something", os.Getenv("SECRET_VALUE"))
 }
 
 //----------------------------------------------------------
 
-// Only one of the subtests of this suite should run inside docker.
+// Only one of the subtests of this test group should run inside docker.
 func TestDocketRunForSingleSubtest(t *testing.T) {
-	suite.Run(t, new(SubtestSuite))
+	var grp SubtestGroup
+	testgroup.RunSerially(t, &grp)
 }
 
-type SubtestSuite struct {
-	suite.Suite
+type SubtestGroup struct{}
+
+func (grp *SubtestGroup) OutsideDocker(t *testgroup.T) {
+	t.Equal("", os.Getenv("SECRET_VALUE"))
 }
 
-func (s *SubtestSuite) TestOutsideDocker() {
-	s.Equal("", os.Getenv("SECRET_VALUE"))
-}
-
-func (s *SubtestSuite) TestInsideDocker() {
+func (grp *SubtestGroup) InsideDocker(t *testgroup.T) {
 	ctx := context.Background()
 
-	docket.Run(ctx, nil, s.T(), func() {
-		s.Equal("something", os.Getenv("SECRET_VALUE"))
+	docket.Run(ctx, nil, t.T, func() {
+		t.Equal("something", os.Getenv("SECRET_VALUE"))
 	})
 }

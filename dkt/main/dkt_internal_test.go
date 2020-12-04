@@ -20,182 +20,182 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/suite"
+	"github.com/bloomberg/go-testgroup"
 )
 
 //------------------------------------------------------------------------------
 
 func Test_dkt(t *testing.T) {
-	suite.Run(t, new(dktSuite))
+	testgroup.RunSerially(t, new(dktTests)) // cannot parallelize due to chdir
 }
 
-type dktSuite struct {
-	suite.Suite
-}
+type dktTests struct{}
 
-func (s *dktSuite) Test_help() {
+func (grp *dktTests) Help(t *testgroup.T) {
 	testcases := [][]string{{"-h"}, {"--help"}, {"help"}, { /* (no args) */ }}
 
 	for _, tc := range testcases {
 		tc := tc
-		s.T().Run(fmt.Sprintf("%v", tc), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%v", tc), func(t *testgroup.T) {
 			var stdout, stderr strings.Builder
 			exitCode := run("", "", nil, &stdout, &stderr, tc...)
 
-			assert := assert.New(t)
-			assert.Zero(exitCode)
-			assert.Contains(stdout.String(), "dkt")
-			assert.Contains(stdout.String(), "Usage")
-			assert.Empty(stderr.String())
+			t.Zero(exitCode)
+			t.Contains(stdout.String(), "dkt")
+			t.Contains(stdout.String(), "Usage")
+			t.Empty(stderr.String())
 		})
 	}
 
-	s.T().Run("compose help for config command", func(t *testing.T) {
+	t.Run("compose help for config command", func(t *testgroup.T) {
 		var stdout, stderr strings.Builder
 		exitCode := run("", "", nil, &stdout, &stderr, "help", "config")
 
-		assert := assert.New(t)
-		assert.Zero(exitCode)
-		assert.Contains(stdout.String(), "Usage: config")
-		assert.Empty(stderr.String())
+		t.Zero(exitCode)
+		t.Contains(stdout.String(), "Usage: config")
+		t.Empty(stderr.String())
 	})
 }
 
-func (s *dktSuite) Test_version() {
+func (grp *dktTests) Version(t *testgroup.T) {
 	for _, arg := range []string{"-v", "--version", "version"} {
 		arg := arg
-		s.T().Run(arg, func(t *testing.T) {
+		t.Run(arg, func(t *testgroup.T) {
 			var stdout, stderr strings.Builder
 			exitCode := run("", "", nil, &stdout, &stderr, arg)
 
-			assert := assert.New(t)
-			assert.Zero(exitCode)
-			assert.Contains(stdout.String(), "dkt/main from github.com")
-			assert.Contains(stdout.String(), "docker-compose")
-			assert.Empty(stderr.String())
+			t.Zero(exitCode)
+			t.Contains(stdout.String(), "dkt/main from github.com")
+			t.Contains(stdout.String(), "docker-compose")
+			t.Empty(stderr.String())
 		})
 	}
 
-	s.T().Run("version --short", func(t *testing.T) {
+	t.Run("version --short", func(t *testgroup.T) {
 		var stdout, stderr strings.Builder
 		exitCode := run("", "", nil, &stdout, &stderr, "version", "--short")
 
-		assert := assert.New(t)
-		assert.Zero(exitCode)
-		assert.NotContains(stdout.String(), "dkt")
-		assert.Empty(stderr.String())
+		t.Zero(exitCode)
+		t.NotContains(stdout.String(), "dkt")
+		t.Empty(stderr.String())
 	})
 
-	s.T().Run("version bad-arg", func(t *testing.T) {
+	t.Run("version bad-arg", func(t *testgroup.T) {
 		var stdout, stderr strings.Builder
 		exitCode := run("", "", nil, &stdout, &stderr, "version", "bad-arg")
 
-		assert := assert.New(t)
-		assert.NotZero(exitCode)
-		assert.Empty(stdout.String())
-		assert.NotEmpty(stderr.String())
+		t.NotZero(exitCode)
+		t.Empty(stdout.String())
+		t.NotEmpty(stderr.String())
 	})
 }
 
-func (s *dktSuite) Test_config() {
-	s.Require().NoError(os.Chdir("testdata"))
+func (grp *dktTests) Config(t *testgroup.T) {
+	t.Require.NoError(os.Chdir("testdata"))
 	defer func() {
-		s.NoError(os.Chdir(".."))
+		t.NoError(os.Chdir(".."))
 	}()
 
 	var stdout, stderr strings.Builder
 	exitCode := run("", "", nil, &stdout, &stderr, "--mode=good", "config")
 
-	s.Zero(exitCode)
-	s.Contains(stdout.String(), "version")
-	s.Empty(stderr.String())
+	t.Zero(exitCode)
+	t.Contains(stdout.String(), "version")
+	t.Empty(stderr.String())
 }
 
-func (s *dktSuite) Test_docket_failures() {
-	s.Require().NoError(os.Chdir("testdata"))
+func (grp *dktTests) DocketFailure(t *testgroup.T) {
+	t.Require.NoError(os.Chdir("testdata"))
 	defer func() {
-		s.NoError(os.Chdir(".."))
+		t.NoError(os.Chdir(".."))
 	}()
 
 	var stdout, stderr strings.Builder
 	exitCode := run("", "", nil, &stdout, &stderr, "--mode=none", "config")
 
 	// There are no docket mode "none" files in this dir, so this should fail.
-	s.NotZero(exitCode)
-	s.Empty(stdout.String())
-	s.Contains(stderr.String(), "ERROR")
+	t.NotZero(exitCode)
+	t.Empty(stdout.String())
+	t.Contains(stderr.String(), "ERROR")
 }
 
-func (s *dktSuite) Test_compose_failures() {
-	s.Require().NoError(os.Chdir("testdata"))
+func (grp *dktTests) ComposeFailure(t *testgroup.T) {
+	t.Require.NoError(os.Chdir("testdata"))
 	defer func() {
-		s.NoError(os.Chdir(".."))
+		t.NoError(os.Chdir(".."))
 	}()
 
 	var stdout, stderr strings.Builder
 	exitCode := run("", "", nil, &stdout, &stderr, "--mode=good", "dkt_is_the_best")
 
-	s.NotZero(exitCode)
-	s.Empty(stdout.String())
-	s.Contains(stderr.String(), "No such command")
+	t.NotZero(exitCode)
+	t.Empty(stdout.String())
+	t.Contains(stderr.String(), "No such command")
 }
 
-func (s *dktSuite) Test_mode_required() {
+func (grp *dktTests) ModeRequired(t *testgroup.T) {
 	var stdout, stderr strings.Builder
 	exitCode := run("", "", nil, &stdout, &stderr, "config")
 
-	s.NotZero(exitCode)
-	s.Empty(stdout.String())
-	s.Contains(stderr.String(), "ERROR")
+	t.NotZero(exitCode)
+	t.Empty(stdout.String())
+	t.Contains(stderr.String(), "ERROR")
 }
 
-func (s *dktSuite) Test_mode_and_prefix_from_env() {
-	s.Require().NoError(os.Chdir("testdata"))
+func (grp *dktTests) ModeAndPrefix(t *testgroup.T) {
+	t.RunSerially(&modeAndPrefixTests{})
+}
+
+//------------------------------------------------------------------------------
+
+type modeAndPrefixTests struct{}
+
+func (grp *modeAndPrefixTests) FromEnv(t *testgroup.T) {
+	t.Require.NoError(os.Chdir("testdata"))
 	defer func() {
-		s.NoError(os.Chdir(".."))
+		t.NoError(os.Chdir(".."))
 	}()
 
 	var stdout, stderr strings.Builder
 	exitCode := run("good", "docket", nil, &stdout, &stderr, "config")
 
-	s.Zero(exitCode)
-	s.Contains(stdout.String(), "version")
-	s.Empty(stderr.String())
+	t.Zero(exitCode)
+	t.Contains(stdout.String(), "version")
+	t.Empty(stderr.String())
 }
 
-func (s *dktSuite) Test_mode_and_prefix_args_override_env() {
-	s.Require().NoError(os.Chdir("testdata"))
+func (grp *modeAndPrefixTests) ArgsOverrideEnv(t *testgroup.T) {
+	t.Require.NoError(os.Chdir("testdata"))
 	defer func() {
-		s.NoError(os.Chdir(".."))
+		t.NoError(os.Chdir(".."))
 	}()
 
 	var stdout, stderr strings.Builder
 	exitCode := run("bad_mode", "bad_prefix", nil, &stdout, &stderr,
 		"--mode=good", "--prefix=docket", "config")
 
-	s.Zero(exitCode)
-	s.Contains(stdout.String(), "version")
-	s.Empty(stderr.String())
+	t.Zero(exitCode)
+	t.Contains(stdout.String(), "version")
+	t.Empty(stderr.String())
 }
 
-func (s *dktSuite) Test_mode_prefix_missing_argument() {
+func (grp *modeAndPrefixTests) MissingArguments(t *testgroup.T) {
 	testcases := []string{"-m", "--mode", "-P", "--prefix"}
 
 	for _, tc := range testcases {
 		tc := tc
-		s.T().Run(tc, func(t *testing.T) {
+		t.Run(tc, func(t *testgroup.T) {
 			var stdout, stderr strings.Builder
 			exitCode := run("", "", nil, nil, &stderr, tc)
-			assert := assert.New(t)
-			assert.NotZero(exitCode)
-			assert.Empty(stdout.String())
-			assert.Contains(stderr.String(), "missing")
+
+			t.NotZero(exitCode)
+			t.Empty(stdout.String())
+			t.Contains(stderr.String(), "missing")
 		})
 	}
 }
 
-func (s *dktSuite) Test_parseArgs_mode_and_prefix_variations() {
+func (grp *modeAndPrefixTests) FlagVariations(t *testgroup.T) {
 	flags := []struct {
 		short        string
 		long         string
@@ -216,21 +216,20 @@ func (s *dktSuite) Test_parseArgs_mode_and_prefix_variations() {
 	for _, flag := range flags {
 		flag := flag
 
-		for _, v := range flagVariations(flag.short, flag.long, "VALUE") {
+		for _, v := range generateFlagVariations(flag.short, flag.long, "VALUE") {
 			v := v
-			s.T().Run(fmt.Sprintf("%v", v), func(t *testing.T) {
+			t.Run(fmt.Sprintf("%v", v), func(t *testgroup.T) {
 				opts, extras, err := parseArgs(append(v, "extra"))
 
-				assert := assert.New(t)
-				assert.Equal(flag.expectedOpts, opts)
-				assert.Equal([]string{"extra"}, extras)
-				assert.NoError(err)
+				t.Equal(flag.expectedOpts, opts)
+				t.Equal([]string{"extra"}, extras)
+				t.NoError(err)
 			})
 		}
 	}
 }
 
-func flagVariations(short, long, value string) [][]string {
+func generateFlagVariations(short, long, value string) [][]string {
 	return [][]string{
 		{"-" + short, value},
 		{"-" + short + value},
