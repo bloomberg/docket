@@ -113,7 +113,6 @@ func (s *RedisPingerSuite) Test_FullMode() {
 func (s *RedisPingerSuite) runDkt(ctx context.Context, exePath string, arg ...string) []byte {
 	cmd := exec.CommandContext(ctx, exePath, arg...)
 	cmd.Dir = s.dir
-	cmd.Env = os.Environ()
 
 	out, err := cmd.Output()
 	if err != nil {
@@ -132,7 +131,6 @@ func (s *RedisPingerSuite) runDkt(ctx context.Context, exePath string, arg ...st
 func (s *RedisPingerSuite) startPinger(ctx context.Context) (cmd *exec.Cmd, port string) {
 	cmd = exec.CommandContext(ctx, "go", "run", ".")
 	cmd.Dir = s.dir
-	cmd.Env = os.Environ()
 
 	stdout, err := cmd.StdoutPipe()
 	s.Require().NoError(err)
