@@ -16,6 +16,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -70,7 +71,7 @@ func run(
 	if debugTraceEnabled {
 		fmt.Fprintf(stderr, "%sbuilding %s\n", debugPrefix, actualMainPkg)
 	}
-	dktExePath, err := tempbuild.Build(actualMainPkg, "dkt.")
+	dktExePath, err := tempbuild.Build(context.Background(), actualMainPkg, "dkt.")
 	if err != nil {
 		fmt.Fprintf(stderr, "ERROR: failed to build dkt: %v\n", err)
 		fmt.Fprintf(stderr, "--- diagnostics follow ---\n")

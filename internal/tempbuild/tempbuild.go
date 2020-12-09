@@ -15,6 +15,7 @@
 package tempbuild
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -25,7 +26,7 @@ import (
 //
 // Instead of installing a program in a global location like GOBIN, you can use Build
 // to make a temporary/private copy of the program.
-func Build(packageSpec, tempFilePattern string) (string, error) {
+func Build(ctx context.Context, packageSpec, tempFilePattern string) (string, error) {
 	file, err := ioutil.TempFile("", tempFilePattern)
 	if err != nil {
 		return "", fmt.Errorf("failed ioutil.TempFile: %w", err)
@@ -34,7 +35,7 @@ func Build(packageSpec, tempFilePattern string) (string, error) {
 	path := file.Name()
 	file.Close()
 
-	buildCmd := exec.Command("go", "build", "-o", path, packageSpec)
+	buildCmd := exec.CommandContext(ctx, "go", "build", "-o", path, packageSpec)
 	buildOutput, err := buildCmd.CombinedOutput()
 	if err != nil {
 		os.Remove(path)

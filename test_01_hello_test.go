@@ -15,7 +15,6 @@
 package docket_test
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -43,7 +42,7 @@ type HelloSuite struct {
 }
 
 func (s *HelloSuite) Test_FailsOutsideDocker() {
-	cmd := exec.CommandContext(context.Background(), "go", "test", "-v")
+	cmd := exec.Command("go", "test", "-v")
 	cmd.Args = append(cmd.Args, goTestCoverageArgs(s.T().Name())...)
 	cmd.Args = append(cmd.Args, goTestRaceDetectorArgs()...)
 	cmd.Dir = s.dir
@@ -56,7 +55,7 @@ func (s *HelloSuite) Test_FailsOutsideDocker() {
 }
 
 func (s *HelloSuite) Test_SucceedsInsideDocker() {
-	cmd := exec.CommandContext(context.Background(), "go", "test", "-v")
+	cmd := exec.Command("go", "test", "-v")
 	cmd.Args = append(cmd.Args, goTestCoverageArgs(s.T().Name())...)
 	cmd.Args = append(cmd.Args, goTestRaceDetectorArgs()...)
 	cmd.Dir = s.dir

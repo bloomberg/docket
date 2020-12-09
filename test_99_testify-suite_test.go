@@ -17,7 +17,6 @@ package docket_test
 import (
 	"bufio"
 	"bytes"
-	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -46,11 +45,11 @@ type TestifySuiteSuite struct {
 }
 
 func (s *TestifySuiteSuite) Test_All() {
-	s.runGoTest(context.Background())
+	s.runGoTest()
 }
 
 func (s *TestifySuiteSuite) Test_SuiteLevel_OnlySubtestA() {
-	output, sawA, sawB, sawC, sawOthers := s.testSubtestA(context.Background(), true)
+	output, sawA, sawB, sawC, sawOthers := s.testSubtestA(true)
 
 	s.Equalf(true, sawA, "should have seen TestA, output: %s", output)
 	s.Equalf(false, sawB, "should not have seen TestB, output: %s", output)
@@ -59,7 +58,7 @@ func (s *TestifySuiteSuite) Test_SuiteLevel_OnlySubtestA() {
 }
 
 func (s *TestifySuiteSuite) Test_SuiteLevel_EverythingButSubtestA() {
-	output, sawA, sawB, sawC, sawOthers := s.testSubtestA(context.Background(), false)
+	output, sawA, sawB, sawC, sawOthers := s.testSubtestA(false)
 
 	s.Equalf(false, sawA, "should not have seen TestA, output: %s", output)
 	s.Equalf(true, sawB, "should have seen TestB, output: %s", output)
@@ -69,8 +68,8 @@ func (s *TestifySuiteSuite) Test_SuiteLevel_EverythingButSubtestA() {
 
 //------------------------------------------------------------------------------
 
-func (s *TestifySuiteSuite) runGoTest(ctx context.Context, arg ...string) []byte {
-	cmd := exec.CommandContext(ctx, "go", "test", "-v")
+func (s *TestifySuiteSuite) runGoTest(arg ...string) []byte {
+	cmd := exec.Command("go", "test", "-v")
 	cmd.Args = append(cmd.Args, goTestCoverageArgs(s.T().Name())...)
 	cmd.Args = append(cmd.Args, goTestRaceDetectorArgs()...)
 	cmd.Args = append(cmd.Args, arg...)
@@ -87,7 +86,7 @@ func (s *TestifySuiteSuite) runGoTest(ctx context.Context, arg ...string) []byte
 }
 
 // Helper routine that either runs ONLY subtestA or everything EXCEPT subtestA.
-func (s *TestifySuiteSuite) testSubtestA(ctx context.Context, includeA bool) (
+func (s *TestifySuiteSuite) testSubtestA(includeA bool) (
 	output []byte, sawA, sawB, sawC, sawOthers bool,
 ) {
 	negation := ""
@@ -96,7 +95,7 @@ func (s *TestifySuiteSuite) testSubtestA(ctx context.Context, includeA bool) (
 	}
 	runArg := fmt.Sprintf("-run=DocketRunAtSuiteLevel/Test[%sA]", negation)
 
-	output = s.runGoTest(ctx, runArg)
+	output = s.runGoTest(runArg)
 
 	ranTest := regexp.MustCompile(`^=== RUN   Test.+/Test[A-Z]$`)
 

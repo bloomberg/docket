@@ -15,7 +15,6 @@
 package docket_test
 
 import (
-	"context"
 	"os/exec"
 	"testing"
 
@@ -31,7 +30,7 @@ type HelpSuite struct {
 }
 
 func (s *HelpSuite) Test_runGoTest() {
-	cmd := exec.CommandContext(context.Background(), "go", "test", "-help-docket")
+	cmd := exec.Command("go", "test", "-help-docket")
 	cmd.Args = append(cmd.Args, goTestCoverageArgs(s.T().Name())...)
 	cmd.Args = append(cmd.Args, goTestRaceDetectorArgs()...)
 
