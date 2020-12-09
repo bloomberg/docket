@@ -8,6 +8,7 @@ linters:
     - unused
   disable:
     - wsl
+    - paralleltest
 
 linters-settings:
   gocognit:
