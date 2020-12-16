@@ -18,19 +18,17 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/suite"
+	"github.com/bloomberg/go-testgroup"
 )
 
 func Test_help_internal(t *testing.T) {
-	suite.Run(t, &HelpInternalSuite{})
+	testgroup.RunSerially(t, &InternalHelpTests{})
 }
 
-type HelpInternalSuite struct {
-	suite.Suite
-}
+type InternalHelpTests struct{}
 
-func (s *HelpInternalSuite) Test_writeHelp() {
+func (*InternalHelpTests) WriteHelp(t *testgroup.T) {
 	var sb strings.Builder
 	writeHelp(&sb)
-	s.Regexp("Help for using docket:", sb.String())
+	t.Regexp("Help for using docket:", sb.String())
 }

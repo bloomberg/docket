@@ -1,0 +1,11 @@
+version: "3.2"
+
+services:
+  tester:
+    image: golang:1
+    command: ["bash", "-c", "tail -f /dev/null & trap 'kill %1' SIGTERM ; wait"]
+    labels:
+      com.bloomberg.docket: "run go test"
+    environment:
+      GO111MODULE: ${GO111MODULE-} # added to support GOPATH mode
+      SECRET_VALUE: something

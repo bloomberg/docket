@@ -27,35 +27,32 @@ import (
 	"testing"
 
 	"github.com/bloomberg/docket/internal/tempbuild"
-	"github.com/stretchr/testify/suite"
+	"github.com/bloomberg/go-testgroup"
 )
 
 func Test_03_redispinger_service(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping docker-dependent test suite in short mode")
+		t.Skip("skipping docker-dependent tests in short mode")
 	}
 
-	suite.Run(t, &RedisPingerSuite{
-		Suite: suite.Suite{},
-		dir:   filepath.Join("testdata", "03_redispinger-service"),
+	testgroup.RunSerially(t, &RedisPingerTests{
+		dir: filepath.Join("testdata", "03_redispinger-service"),
 	})
 }
 
-type RedisPingerSuite struct {
-	suite.Suite
-
+type RedisPingerTests struct {
 	dir string
 }
 
-func (s *RedisPingerSuite) Test_DebugMode() {
+func (grp *RedisPingerTests) DebugMode(t *testgroup.T) {
 	ctx := context.Background()
 
 	dktPath, err := tempbuild.Build(ctx, "github.com/bloomberg/docket/dkt", "dkt.")
-	s.Require().NoError(err)
-	defer os.Remove(dktPath)
+	t.Require.NoError(err)
+	defer func() { t.NoError(os.Remove(dktPath)) }()
 
 	dkt := func(arg ...string) []byte {
-		return s.runDkt(dktPath, append([]string{"--mode=debug"}, arg...)...)
+		return grp.runDkt(t, dktPath, append([]string{"--mode=debug"}, arg...)...)
 	}
 
 	// Bring up docker compose app and discover redis's port
@@ -65,22 +62,22 @@ func (s *RedisPingerSuite) Test_DebugMode() {
 
 	_, redisPort, err := net.SplitHostPort(strings.TrimSpace(string(
 		dkt("port", "redis", "6379"))))
-	s.Require().NoError(err)
+	t.Require.NoError(err)
 
 	// Start a pinger service and discover its listener port
 
-	pingerCmd, pingerPort := s.startPinger()
+	pingerCmd, pingerPort := grp.startPinger(t)
 	defer func() {
-		s.Require().NoError(pingerCmd.Process.Kill())
-		s.Error(pingerCmd.Wait()) // since we killed the process, Wait will return an error
+		t.Require.NoError(pingerCmd.Process.Kill())
+		t.Error(pingerCmd.Wait()) // since we killed the process, Wait will return an error
 	}()
 
 	// Run go test with REDISPINGER_URL set properly
 
 	testCmd := exec.Command("go", "test", "-v")
-	testCmd.Args = append(testCmd.Args, goTestCoverageArgs(s.T().Name())...)
+	testCmd.Args = append(testCmd.Args, goTestCoverageArgs(t.Name())...)
 	testCmd.Args = append(testCmd.Args, goTestRaceDetectorArgs()...)
-	testCmd.Dir = s.dir
+	testCmd.Dir = grp.dir
 	testCmd.Env = append(
 		os.Environ(),
 		fmt.Sprintf("REDISPINGER_URL=http://localhost:%s/?redisAddr=localhost:%s",
@@ -88,66 +85,60 @@ func (s *RedisPingerSuite) Test_DebugMode() {
 		"DOCKET_MODE=debug")
 
 	out, err := testCmd.CombinedOutput()
-	if err != nil {
-		fmt.Printf("%s", out)
-	}
-	s.NoError(err)
+	t.NoError(err, "output: %q", out)
 }
 
-func (s *RedisPingerSuite) Test_FullMode() {
+func (grp *RedisPingerTests) FullMode(t *testgroup.T) {
 	cmd := exec.Command("go", "test", "-v")
-	cmd.Args = append(cmd.Args, goTestCoverageArgs(s.T().Name())...)
+	cmd.Args = append(cmd.Args, goTestCoverageArgs(t.Name())...)
 	cmd.Args = append(cmd.Args, goTestRaceDetectorArgs()...)
-	cmd.Dir = s.dir
+	cmd.Dir = grp.dir
 	cmd.Env = append(os.Environ(), "DOCKET_MODE=full", "DOCKET_DOWN=1")
 
 	out, err := cmd.CombinedOutput()
-	if err != nil {
-		fmt.Printf("%s", out)
-	}
-	s.NoError(err)
+	t.NoError(err, "output: %q", out)
 }
 
 //------------------------------------------------------------------------------
 
-func (s *RedisPingerSuite) runDkt(exePath string, arg ...string) []byte {
+func (grp *RedisPingerTests) runDkt(t *testgroup.T, exePath string, arg ...string) []byte {
 	cmd := exec.Command(exePath, arg...)
-	cmd.Dir = s.dir
+	cmd.Dir = grp.dir
 
 	out, err := cmd.Output()
 	if err != nil {
 		var exitErr *exec.ExitError
 		if errors.As(err, &exitErr) {
-			s.T().Logf("err: %v, stdout: %s, stderr: %s", err, out, exitErr.Stderr)
+			t.Logf("err: %v, stdout: %s, stderr: %s", err, out, exitErr.Stderr)
 		} else {
-			s.T().Logf("err: %v, stdout: %s", err, out)
+			t.Logf("err: %v, stdout: %s", err, out)
 		}
 	}
-	s.NoError(err)
+	t.NoError(err)
 
 	return out
 }
 
-func (s *RedisPingerSuite) startPinger() (cmd *exec.Cmd, port string) {
+func (grp *RedisPingerTests) startPinger(t *testgroup.T) (cmd *exec.Cmd, port string) {
 	cmd = exec.Command("go", "run", ".")
-	cmd.Dir = s.dir
+	cmd.Dir = grp.dir
 
 	stdout, err := cmd.StdoutPipe()
-	s.Require().NoError(err)
+	t.Require.NoError(err)
 
-	s.Require().NoError(cmd.Start())
+	t.Require.NoError(cmd.Start())
 
 	scanner := bufio.NewScanner(stdout)
-	s.Require().True(scanner.Scan())
-	s.Require().NoError(scanner.Err())
+	t.Require.True(scanner.Scan())
+	t.Require.NoError(scanner.Err())
 	line := scanner.Text()
 
 	// should look like "Listening on 127.0.0.1:1234"
 	parts := strings.Fields(line)
-	s.Require().Equal(3, len(parts))
+	t.Require.Equal(3, len(parts))
 
 	_, port, err = net.SplitHostPort(parts[2])
-	s.Require().NoError(err)
+	t.Require.NoError(err)
 
 	return cmd, port
 }

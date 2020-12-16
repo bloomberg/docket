@@ -18,20 +18,18 @@ import (
 	"os/exec"
 	"testing"
 
-	"github.com/stretchr/testify/suite"
+	"github.com/bloomberg/go-testgroup"
 )
 
 func Test_help(t *testing.T) {
-	suite.Run(t, &HelpSuite{})
+	testgroup.RunSerially(t, &HelpTests{})
 }
 
-type HelpSuite struct {
-	suite.Suite
-}
+type HelpTests struct{}
 
-func (s *HelpSuite) Test_runGoTest() {
+func (*HelpTests) RunGoTest(t *testgroup.T) {
 	cmd := exec.Command("go", "test", "-help-docket")
-	cmd.Args = append(cmd.Args, goTestCoverageArgs(s.T().Name())...)
+	cmd.Args = append(cmd.Args, goTestCoverageArgs(t.Name())...)
 	cmd.Args = append(cmd.Args, goTestRaceDetectorArgs()...)
 
 	// When run inside go test,
@@ -42,6 +40,6 @@ func (s *HelpSuite) Test_runGoTest() {
 
 	out, err := cmd.CombinedOutput()
 
-	s.Error(err)
-	s.Regexp("Help for using docket:", string(out))
+	t.Error(err)
+	t.Regexp("Help for using docket:", string(out))
 }

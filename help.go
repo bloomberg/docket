@@ -39,10 +39,10 @@ Help for using docket:
 Optional environment variables:
 
   {{ var "DOCKET_DOWN" }} (default off)
-    If non-empty, docket will run 'docker-compose down' after each suite.
+    If non-empty, docket will run 'docker-compose down' at the end of each docket run.
 
   {{ var "DOCKET_PULL" }} (default off)
-    If non-empty, docket will run 'docker-compose pull' before each suite.
+    If non-empty, docket will run 'docker-compose pull' at the start of each docket run.
 
 `[1:])).Execute(out, nil)
 	if err != nil {

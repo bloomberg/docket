@@ -27,7 +27,7 @@ don't activate docket, the test will run as if you weren't using docket at all.
 
 Docket is compatible with the standard [`testing`](https://godoc.org/testing)
 package (including [`T.Run`](https://godoc.org/testing#T.Run) subtests) as well
-as
+as [`testgroup`](https://github.com/bloomberg/go-testgroup) and
 [`testify/suite`](https://github.com/stretchr/testify/blob/master/README.md#suite-package).
 
 ### dkt
@@ -45,6 +45,7 @@ directory.
 | &nbsp;&nbsp;&nbsp; [`01_hello`](testdata/01_hello)                             | Read an environment variable.                  |
 | &nbsp;&nbsp;&nbsp; [`02_ping-redis`](testdata/02_ping-redis)                   | Test a function to ping a Redis server         |
 | &nbsp;&nbsp;&nbsp; [`03_redispinger-service`](testdata/03_redispinger-service) | Test an HTTP service that pings a Redis server |
+| &nbsp;&nbsp;&nbsp; [`98_testgroup`](testdata/98_testgroup)                     | Use docket with a test group.                  |
 | &nbsp;&nbsp;&nbsp; [`99_testify-suite`](testdata/99_testify-suite)             | Use docket with a testify suite.               |
 
 ## Help
