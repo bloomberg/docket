@@ -68,7 +68,7 @@ a `.yaml` or `.yml` extension) with names like
 - `docket.awesome.*.yaml`
 
 For more detailed examples, refer to the
-[tests](internal/compose/files_test.go).
+[tests](internal/compose/files_internal_test.go).
 
 ### Optional
 
@@ -106,7 +106,7 @@ directory, you can call `docket.RunPrefix()` to have docket look for YAML files
 starting with your custom prefix instead of the default prefix (`"docket"`).
 
 For more detailed examples, refer to the
-[tests](internal/compose/files_test.go).
+[tests](internal/compose/files_internal_test.go).
 
 ## Testing Docket
 
